@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personal Reference Catalog</title>
+<title>個人資料庫索引</title>
 <script src="sql-wasm.js"></script>
 
 <style>
@@ -139,24 +139,24 @@ button:hover{
 <body>
 <div class="wrap">
 
-<h1>Personal Reference Catalog</h1>
+<h1>個人資料庫索引</h1>
 
 <div class="box">
-  <div><b>Database</b></div>
+  <div><b>資料庫</b></div>
   <div style="margin-top:8px;">
-    <button onclick="createDB()">Create new DB</button>
+    <button onclick="createDB()">建立新資料庫</button>
     <input type="file" id="file" style="margin-top:8px;">
-    <button onclick="exportDB()">Download DB</button>
-    <button onclick="toggleForm()">Add entry</button>
+    <button onclick="exportDB()">下載資料庫</button>
+    <button onclick="toggleForm()">新增資料</button>
   </div>
-  <div id="state" class="small">engine loading...</div>
+  <div id="state" class="small">引擎載入中...</div>
 </div>
 
 <div id="formBox" class="box hidden">
-  <div><b>New Entry</b></div>
+  <div><b>新增資料</b></div>
 
   <div class="row">
-    <label>Title !!</label>
+    <label>標題 !!</label>
     <input id="title" placeholder="在此輸入標題">
   </div>
 
@@ -170,10 +170,10 @@ button:hover{
     </div>
 
     <div class="row">
-      <label>Add new L1</label>
+      <label>新增 L1</label>
       <div class="inline-tools">
         <input id="newL1" placeholder="例如：HM" maxlength="2" style="flex:1;">
-        <button type="button" onclick="addL1Option()">Add L1</button>
+        <button type="button" onclick="addL1Option()">加入 L1</button>
       </div>
     </div>
   </div>
@@ -200,7 +200,7 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>Ownership !!</label>
+      <label>擁有權 !!</label>
       <select id="ownership">
         <option value="">請選擇</option>
         <option value="mine">mine</option>
@@ -211,7 +211,7 @@ button:hover{
     </div>
 
     <div class="row">
-      <label>Relation !!</label>
+      <label>關聯 !!</label>
       <select id="relation">
         <option value="">請選擇</option>
         <option value="commissioned">commissioned</option>
@@ -224,7 +224,7 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>Type !!</label>
+      <label>類型 !!</label>
       <select id="type">
         <option value="">請選擇</option>
         <option value="work">work</option>
@@ -250,7 +250,7 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>Difficulty</label>
+      <label>難度</label>
       <select id="difficulty">
         <option value="">空白</option>
         <option value="beginner">beginner</option>
@@ -260,7 +260,7 @@ button:hover{
     </div>
 
     <div class="row">
-      <label>Status</label>
+      <label>進度狀態</label>
       <select id="status">
         <option value="">空白</option>
         <option value="planned">planned</option>
@@ -272,46 +272,46 @@ button:hover{
   </div>
 
   <div class="row">
-    <label>Links</label>
+    <label>連結</label>
     <input id="link" placeholder="雲端資料夾連結 / URL">
   </div>
 
   <div class="row">
-    <label>APA style</label>
-    <textarea id="apa" placeholder="APA style"></textarea>
+    <label>APA 格式</label>
+    <textarea id="apa" placeholder="APA 格式"></textarea>
   </div>
 
   <div class="row">
-    <label>Info</label>
-    <textarea id="info" placeholder="Info"></textarea>
+    <label>資訊</label>
+    <textarea id="info" placeholder="資訊"></textarea>
   </div>
 
   <div class="row">
-    <label>Notes</label>
-    <textarea id="notes" placeholder="Notes"></textarea>
+    <label>筆記</label>
+    <textarea id="notes" placeholder="筆記"></textarea>
   </div>
 
   <div class="row">
-    <label>tags</label>
+    <label>標籤</label>
     <input id="tags" placeholder="#tag1 #tag2">
   </div>
 
-  <button onclick="add()">Save</button>
+  <button onclick="add()">儲存</button>
 </div>
 
 <div class="box">
-  <div><b>Search</b></div>
-  <input id="search" placeholder="搜尋 title / id / tags / info / notes / apa" oninput="renderList()" style="margin-top:8px;">
+  <div><b>搜尋</b></div>
+  <input id="search" placeholder="搜尋標題 / id / 標籤 / 資訊 / 筆記 / apa" oninput="renderList()" style="margin-top:8px;">
 </div>
 
 <div class="box">
-  <div><b>Index</b></div>
-  <div id="list" class="small">No database loaded.</div>
+  <div><b>索引</b></div>
+  <div id="list" class="small">尚未載入資料庫。</div>
 </div>
 
 <div class="box">
-  <div><b>Detail</b></div>
-  <div id="detail" class="small" style="margin-top:8px;">Select an entry.</div>
+  <div><b>詳細資料</b></div>
+  <div id="detail" class="small" style="margin-top:8px;">請選擇一筆資料。</div>
 </div>
 
 </div>
@@ -326,7 +326,7 @@ initSqlJs({
 }).then(function(sql){
   SQL = sql;
   renderL1Options();
-  document.getElementById("state").innerText = "engine ready";
+  document.getElementById("state").innerText = "引擎已就緒";
 });
 
 function createDB(){
@@ -445,7 +445,7 @@ function onL1SelectChange(){
     idInput.value = "";
   }else{
     hint.textContent = "";
-    idHint.textContent = "一般格式：L1-L2-L3-L4，L1~L3 填完會自動產生。";
+    idHint.textContent = "一般格式：L1-L2-L3-L4，L1～L3 填完會自動產生。";
     l2.disabled = false;
     l3.disabled = false;
     idInput.readOnly = true;
@@ -576,7 +576,7 @@ function add(){
   const tags = document.getElementById("tags").value.trim();
 
   if(!title || !id || !ownership || !relation || !type){
-    alert("必填欄位：Title / ID / Ownership / Relation / Type");
+    alert("必填欄位：標題 / ID / 擁有權 / 關聯 / 類型");
     return;
   }
 
@@ -667,7 +667,7 @@ function clearFormKeepStructure(){
 
 function renderList(){
   if(!db){
-    document.getElementById("list").innerHTML = '<div class="small">No database loaded.</div>';
+    document.getElementById("list").innerHTML = '<div class="small">尚未載入資料庫。</div>';
     return;
   }
 
@@ -689,7 +689,7 @@ function renderList(){
   }
 
   if(!items.length){
-    document.getElementById("list").innerHTML = '<div class="empty">No result.</div>';
+    document.getElementById("list").innerHTML = '<div class="empty">沒有符合的資料。</div>';
     return;
   }
 
@@ -698,9 +698,9 @@ function renderList(){
     html += `
       <div class="item" onclick="showDetailById(${JSON.stringify(item.id)})">
         <div class="item-title">${escapeHtml(item.title || "(untitled)")}</div>
-        <div class="item-meta">ID: ${escapeHtml(item.id)}</div>
-        <div class="item-meta">tags: ${escapeHtml(item.tags || "")}</div>
-        <div class="item-meta">Creation time: ${escapeHtml(item.created_at || "")}</div>
+        <div class="item-meta">ID：${escapeHtml(item.id)}</div>
+        <div class="item-meta">標籤：${escapeHtml(item.tags || "")}</div>
+        <div class="item-meta">建立時間：${escapeHtml(item.created_at || "")}</div>
       </div>
     `;
   });
@@ -716,49 +716,49 @@ function showDetailById(id){
   document.getElementById("detail").innerHTML = `
     <div class="detail-title">${escapeHtml(item.title)}</div>
 
-    <div class="section-title">Status</div>
+    <div class="section-title">狀態</div>
     <div class="detail-block">
-      <div class="detail-line"><span class="inline-label">ID:</span> ${escapeHtml(item.id)}</div>
-      <div class="detail-line"><span class="inline-label">Ownership:</span> ${escapeHtml(item.ownership)}</div>
-      <div class="detail-line"><span class="inline-label">Relation:</span> ${escapeHtml(item.relation)}</div>
-      <div class="detail-line"><span class="inline-label">Type:</span> ${escapeHtml(item.type)}</div>
-      <div class="detail-line"><span class="inline-label">Creation time:</span> ${escapeHtml(item.created_at)}</div>
-      <div class="detail-line"><span class="inline-label">CEFR:</span> ${escapeHtml(item.cefr)}</div>
-      <div class="detail-line"><span class="inline-label">Difficulty:</span> ${escapeHtml(item.difficulty)}</div>
-      <div class="detail-line"><span class="inline-label">Status:</span> ${escapeHtml(item.status)}</div>
+      <div class="detail-line"><span class="inline-label">ID：</span>${escapeHtml(item.id)}</div>
+      <div class="detail-line"><span class="inline-label">擁有權：</span>${escapeHtml(item.ownership)}</div>
+      <div class="detail-line"><span class="inline-label">關聯：</span>${escapeHtml(item.relation)}</div>
+      <div class="detail-line"><span class="inline-label">類型：</span>${escapeHtml(item.type)}</div>
+      <div class="detail-line"><span class="inline-label">建立時間：</span>${escapeHtml(item.created_at)}</div>
+      <div class="detail-line"><span class="inline-label">CEFR：</span>${escapeHtml(item.cefr)}</div>
+      <div class="detail-line"><span class="inline-label">難度：</span>${escapeHtml(item.difficulty)}</div>
+      <div class="detail-line"><span class="inline-label">進度狀態：</span>${escapeHtml(item.status)}</div>
     </div>
 
     <div class="hr"></div>
 
-    <div class="section-title">References</div>
+    <div class="section-title">參考資料</div>
     <div class="detail-block">
-      <div class="detail-line"><span class="inline-label">Links:</span> ${
+      <div class="detail-line"><span class="inline-label">連結：</span>${
         item.link
-          ? `<a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">open</a>`
+          ? `<a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">開啟</a>`
           : ""
       }</div>
-      <div class="detail-line"><span class="inline-label">APA style:</span><br>${nl2br(escapeHtml(item.apa))}</div>
+      <div class="detail-line"><span class="inline-label">APA 格式：</span><br>${nl2br(escapeHtml(item.apa))}</div>
     </div>
 
     <div class="hr"></div>
 
-    <div class="section-title">Info</div>
+    <div class="section-title">資訊</div>
     <div class="detail-block">${nl2br(escapeHtml(item.info))}</div>
 
     <div class="hr"></div>
 
-    <div class="section-title">Notes</div>
+    <div class="section-title">筆記</div>
     <div class="detail-block">${nl2br(escapeHtml(item.notes))}</div>
 
     <div class="hr"></div>
 
-    <div class="section-title">tags</div>
+    <div class="section-title">標籤</div>
     <div class="detail-block">${escapeHtml(item.tags)}</div>
   `;
 }
 
 function clearDetail(){
-  document.getElementById("detail").innerHTML = "Select an entry.";
+  document.getElementById("detail").innerHTML = "請選擇一筆資料。";
 }
 
 function exportDB(){
