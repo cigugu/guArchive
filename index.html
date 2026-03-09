@@ -180,6 +180,17 @@ td.time-cell{
     grid-template-columns:1fr 1fr;
   }
 }
+  .tag-chip{
+  border:1px solid #222;
+  padding:2px 6px;
+  margin-right:4px;
+  cursor:pointer;
+  display:inline-block;
+}
+
+.tag-chip:hover{
+  background:#eee;
+}
 </style>
 </head>
 <body>
@@ -869,7 +880,7 @@ function renderList(){
           <span class="title-link" data-id="${escapeAttr(item.id)}">${escapeHtml(item.title || "")}</span>
         </td>
         <td>${escapeHtml(item.id || "")}</td>
-        <td class="tags-cell">${escapeHtml(item.tags || "")}</td>
+        <td class="tags-cell">${renderTagChips(item.tags)}</td>
         <td class="time-cell">${escapeHtml(item.created_at || "")}</td>
       </tr>
     `;
@@ -896,12 +907,12 @@ function renderDetailMeta(item){
     <div style="margin-bottom:8px;"><b>${escapeHtml(item.title || "")}</b></div>
     <div class="badge-line">
       <span class="badge">ID: ${escapeHtml(item.id || "")}</span>
-      <span class="badge">ownership: ${escapeHtml(item.ownership || "blank")}</span>
-      <span class="badge">relation: ${escapeHtml(item.relation || "blank")}</span>
-      <span class="badge">type: ${escapeHtml(item.type || "blank")}</span>
-      <span class="badge">CEFR: ${escapeHtml(item.cefr || "blank")}</span>
-      <span class="badge">difficulty: ${escapeHtml(item.difficulty || "blank")}</span>
-      <span class="badge">status: ${escapeHtml(item.status || "blank")}</span>
+      <span class="badge">ownership: ${escapeHtml(item.ownership || "—")}</span>
+<span class="badge">relation: ${escapeHtml(item.relation || "—")}</span>
+<span class="badge">type: ${escapeHtml(item.type || "—")}</span>
+<span class="badge">CEFR: ${escapeHtml(item.cefr || "—")}</span>
+<span class="badge">difficulty: ${escapeHtml(item.difficulty || "—")}</span>
+<span class="badge">status: ${escapeHtml(item.status || "—")}</span>
     </div>
     <div style="margin-top:8px;"><b>Created:</b> ${escapeHtml(item.created_at || "")}</div>
     <div style="margin-top:8px;"><b>Tags:</b> ${escapeHtml(item.tags || "") || '<span class="small">blank</span>'}</div>
@@ -1163,6 +1174,32 @@ function escapeAttr(str){
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;");
 }
+
+  function parseTags(tagsText){
+  return String(tagsText || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function renderTagChips(tagsText){
+  const tags = parseTags(tagsText);
+
+  if(!tags.length){
+    return "";
+  }
+
+  return tags.map(tag => {
+    return `<span class="tag-chip" onclick="searchByTag('${tag}')">${tag}</span>`;
+  }).join(" ");
+}
+
+function searchByTag(tag){
+  backToIndex();
+  document.getElementById("search").value = tag;
+  renderList();
+}
+  
 </script>
 </body>
 </html>
