@@ -15,7 +15,7 @@ body{
   color:#111;
 }
 .wrap{
-  max-width:960px;
+  max-width:1080px;
   margin:0 auto;
 }
 h1{
@@ -68,22 +68,6 @@ button:hover{
 .hidden{
   display:none;
 }
-.item{
-  border-bottom:1px solid #ddd;
-  padding:10px 6px;
-}
-.item:last-child{
-  border-bottom:none;
-}
-.item-title{
-  font-weight:bold;
-  margin-bottom:4px;
-}
-.item-meta{
-  font-size:12px;
-  color:#555;
-  line-height:1.6;
-}
 .empty{
   color:#666;
   font-size:12px;
@@ -101,6 +85,43 @@ button:hover{
 }
 .readonly{
   background:#f1f1f1;
+}
+
+.table-wrap{
+  overflow-x:auto;
+  margin-top:10px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th, td{
+  border:1px solid #222;
+  padding:8px;
+  text-align:left;
+  vertical-align:top;
+  white-space:nowrap;
+}
+th{
+  background:#f0f0f0;
+}
+td.title-cell{
+  min-width:220px;
+  white-space:normal;
+}
+td.tags-cell{
+  min-width:140px;
+  white-space:normal;
+}
+td.time-cell{
+  min-width:170px;
+}
+@media (max-width: 779px){
+  th, td{
+    font-size:12px;
+    padding:6px;
+  }
 }
 @media (min-width: 780px){
   .grid2{
@@ -474,7 +495,7 @@ function parseIDForSort(id){
   if(/^OT-\d{2}$/.test(id)){
     const n = parseInt(id.split("-")[1], 10);
     return {
-      group: 1,
+      group: -1,
       l1: "OT",
       l2: 0,
       l3: 0,
@@ -706,17 +727,36 @@ function renderList(){
     return;
   }
 
-  let html = "";
+  let html = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>ID</th>
+            <th>Tags</th>
+            <th>Creation time</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
   items.forEach(item => {
     html += `
-      <div class="item">
-        <div class="item-title">${escapeHtml(item.title || "(untitled)")}</div>
-        <div class="item-meta">ID: ${escapeHtml(item.id)}</div>
-        <div class="item-meta">Tags: ${escapeHtml(item.tags || "")}</div>
-        <div class="item-meta">Creation time: ${escapeHtml(item.created_at || "")}</div>
-      </div>
+      <tr>
+        <td class="title-cell">${escapeHtml(item.title || "")}</td>
+        <td>${escapeHtml(item.id || "")}</td>
+        <td class="tags-cell">${escapeHtml(item.tags || "")}</td>
+        <td class="time-cell">${escapeHtml(item.created_at || "")}</td>
+      </tr>
     `;
   });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
 
   document.getElementById("list").innerHTML = html;
 }
