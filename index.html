@@ -834,33 +834,53 @@ function renderList(){
     return;
   }
 
-  let items = getAllItems();
-  const q = document.getElementById("search").value.toLowerCase().trim();
-  let tagFilter = null;
+let items = getAllItems();
+const q = document.getElementById("search").value.toLowerCase().trim();
 
 if(q.startsWith("tag:")){
-  tagFilter = q.slice(4).trim();
-}
-
-  if(tagFilter){
-  items = items.filter(item => {
-    const tags = parseTags(item.tags).map(t => t.toLowerCase());
-    return tags.includes(tagFilter);
+  const v = q.slice(4).trim();
+  items = items.filter(item=>{
+    const tags = parseTags(item.tags).map(t=>t.toLowerCase());
+    return tags.includes(v);
   });
 }
+
+else if(q.startsWith("id:")){
+  const v = q.slice(3).trim();
+  items = items.filter(item=>{
+    return (item.id || "").toLowerCase().includes(v);
+  });
+}
+
+else if(q.startsWith("title:")){
+  const v = q.slice(6).trim();
+  items = items.filter(item=>{
+    return (item.title || "").toLowerCase().includes(v);
+  });
+}
+
+else if(q.startsWith("field:")){
+  const v = q.slice(6).trim();
+  items = items.filter(item=>{
+    const l1 = (item.id || "").split("-")[0];
+    return l1 && l1.toLowerCase() === v;
+  });
+}
+
 else if(q){
-    items = items.filter(item => {
-      const text = [
-        item.title,
-        item.id,
-        item.tags,
-        item.info,
-        item.notes,
-        item.apa
-      ].join(" ").toLowerCase();
-      return text.includes(q);
-    });
-  }
+  items = items.filter(item=>{
+    const text = [
+      item.title,
+      item.id,
+      item.tags,
+      item.info,
+      item.notes,
+      item.apa
+    ].join(" ").toLowerCase();
+
+    return text.includes(q);
+  });
+}
 
   items = sortItemsByID(items);
 
