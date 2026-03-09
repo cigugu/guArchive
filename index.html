@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>個人資料庫索引</title>
+<title>Personal Reference Catalog</title>
 <script src="sql-wasm.js"></script>
 
 <style>
@@ -71,13 +71,9 @@ button:hover{
 .item{
   border-bottom:1px solid #ddd;
   padding:10px 6px;
-  cursor:pointer;
 }
 .item:last-child{
   border-bottom:none;
-}
-.item:hover{
-  background:#f3f3f3;
 }
 .item-title{
   font-weight:bold;
@@ -88,32 +84,9 @@ button:hover{
   color:#555;
   line-height:1.6;
 }
-.detail-title{
-  font-size:20px;
-  font-weight:bold;
-  margin-bottom:12px;
-}
-.section-title{
-  font-weight:bold;
-  margin:14px 0 8px 0;
-}
-.detail-block{
-  margin-bottom:10px;
-}
-.detail-line{
-  margin-bottom:6px;
-  line-height:1.6;
-}
-.inline-label{
-  font-weight:bold;
-}
 .empty{
   color:#666;
   font-size:12px;
-}
-.hr{
-  border-top:1px solid #ddd;
-  margin:10px 0;
 }
 .grid2{
   display:grid;
@@ -139,41 +112,41 @@ button:hover{
 <body>
 <div class="wrap">
 
-<h1>個人資料庫索引</h1>
+<h1>Personal Reference Catalog</h1>
 
 <div class="box">
-  <div><b>資料庫</b></div>
+  <div><b>Database</b></div>
   <div style="margin-top:8px;">
-    <button onclick="createDB()">建立新資料庫</button>
+    <button onclick="createDB()">Create new DB</button>
     <input type="file" id="file" style="margin-top:8px;">
-    <button onclick="exportDB()">下載資料庫</button>
-    <button onclick="toggleForm()">新增資料</button>
+    <button onclick="exportDB()">Download DB</button>
+    <button onclick="toggleForm()">Add entry</button>
   </div>
-  <div id="state" class="small">引擎載入中...</div>
+  <div id="state" class="small">engine loading...</div>
 </div>
 
 <div id="formBox" class="box hidden">
-  <div><b>新增資料</b></div>
+  <div><b>New Entry</b></div>
 
   <div class="row">
-    <label>標題 !!</label>
-    <input id="title" placeholder="在此輸入標題">
+    <label>Title !!</label>
+    <input id="title" placeholder="Enter title here">
   </div>
 
   <div class="grid2">
     <div class="row">
-      <label>L1 領域</label>
+      <label>L1 Field</label>
       <select id="l1Select" onchange="onL1SelectChange()">
-        <option value="">請先新增 L1</option>
+        <option value="">Add L1 first</option>
       </select>
-      <div class="small">L1 必須是兩位英文字母，例如 HM、LG、WR。OT 為暫存區例外。</div>
+      <div class="small">L1 must be two English letters, such as HM, LG, WR. OT is the temporary zone exception.</div>
     </div>
 
     <div class="row">
-      <label>新增 L1</label>
+      <label>Add new L1</label>
       <div class="inline-tools">
-        <input id="newL1" placeholder="例如：HM" maxlength="2" style="flex:1;">
-        <button type="button" onclick="addL1Option()">加入 L1</button>
+        <input id="newL1" placeholder="e.g. HM" maxlength="2" style="flex:1;">
+        <button type="button" onclick="addL1Option()">Add L1</button>
       </div>
     </div>
   </div>
@@ -182,27 +155,27 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>L2 分類</label>
-      <input id="l2" placeholder="兩位數，例如 01" maxlength="2" oninput="updateID()">
+      <label>L2 Category</label>
+      <input id="l2" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
     </div>
 
     <div class="row">
-      <label>L3 細項</label>
-      <input id="l3" placeholder="兩位數，例如 01" maxlength="2" oninput="updateID()">
+      <label>L3 Topic</label>
+      <input id="l3" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
     </div>
   </div>
 
   <div class="row">
     <label>ID !!</label>
-    <input id="id" placeholder="例如：HM-01-01-0001 或 OT-01">
-    <div id="idHint" class="small">一般格式：L1-L2-L3-L4。暫存區 OT 由你手動輸入，例如 OT-01。</div>
+    <input id="id" placeholder="e.g. HM-01-01-0001 or OT-01">
+    <div id="idHint" class="small">Standard format: L1-L2-L3-L4. OT is manual input, e.g. OT-01.</div>
   </div>
 
   <div class="grid2">
     <div class="row">
-      <label>擁有權 !!</label>
+      <label>Ownership !!</label>
       <select id="ownership">
-        <option value="">請選擇</option>
+        <option value="">Select</option>
         <option value="mine">mine</option>
         <option value="other">other</option>
         <option value="collaborative">collaborative</option>
@@ -211,9 +184,9 @@ button:hover{
     </div>
 
     <div class="row">
-      <label>關聯 !!</label>
+      <label>Relation !!</label>
       <select id="relation">
-        <option value="">請選擇</option>
+        <option value="">Select</option>
         <option value="commissioned">commissioned</option>
         <option value="general">general</option>
         <option value="personal">personal</option>
@@ -224,9 +197,9 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>類型 !!</label>
+      <label>Type !!</label>
       <select id="type">
-        <option value="">請選擇</option>
+        <option value="">Select</option>
         <option value="work">work</option>
         <option value="tutorial">tutorial</option>
         <option value="reference">reference</option>
@@ -237,7 +210,7 @@ button:hover{
     <div class="row">
       <label>CEFR</label>
       <select id="cefr">
-        <option value="">空白</option>
+        <option value="">Blank</option>
         <option value="A1">A1</option>
         <option value="A2">A2</option>
         <option value="B1">B1</option>
@@ -250,9 +223,9 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>難度</label>
+      <label>Difficulty</label>
       <select id="difficulty">
-        <option value="">空白</option>
+        <option value="">Blank</option>
         <option value="beginner">beginner</option>
         <option value="intermediate">intermediate</option>
         <option value="advanced">advanced</option>
@@ -260,9 +233,9 @@ button:hover{
     </div>
 
     <div class="row">
-      <label>進度狀態</label>
+      <label>Status</label>
       <select id="status">
-        <option value="">空白</option>
+        <option value="">Blank</option>
         <option value="planned">planned</option>
         <option value="in_progress">in_progress</option>
         <option value="completed">completed</option>
@@ -272,46 +245,41 @@ button:hover{
   </div>
 
   <div class="row">
-    <label>連結</label>
-    <input id="link" placeholder="雲端資料夾連結 / URL">
+    <label>Links</label>
+    <input id="link" placeholder="Cloud folder link / URL">
   </div>
 
   <div class="row">
-    <label>APA 格式</label>
-    <textarea id="apa" placeholder="APA 格式"></textarea>
+    <label>APA style</label>
+    <textarea id="apa" placeholder="APA style"></textarea>
   </div>
 
   <div class="row">
-    <label>資訊</label>
-    <textarea id="info" placeholder="資訊"></textarea>
+    <label>Info</label>
+    <textarea id="info" placeholder="Info"></textarea>
   </div>
 
   <div class="row">
-    <label>筆記</label>
-    <textarea id="notes" placeholder="筆記"></textarea>
+    <label>Notes</label>
+    <textarea id="notes" placeholder="Notes"></textarea>
   </div>
 
   <div class="row">
-    <label>標籤</label>
+    <label>Tags</label>
     <input id="tags" placeholder="#tag1 #tag2">
   </div>
 
-  <button onclick="add()">儲存</button>
+  <button onclick="add()">Save</button>
 </div>
 
 <div class="box">
-  <div><b>搜尋</b></div>
-  <input id="search" placeholder="搜尋標題 / id / 標籤 / 資訊 / 筆記 / apa" oninput="renderList()" style="margin-top:8px;">
+  <div><b>Search</b></div>
+  <input id="search" placeholder="Search title / id / tags / info / notes / apa" oninput="renderList()" style="margin-top:8px;">
 </div>
 
 <div class="box">
-  <div><b>索引</b></div>
-  <div id="list" class="small">尚未載入資料庫。</div>
-</div>
-
-<div class="box">
-  <div><b>詳細資料</b></div>
-  <div id="detail" class="small" style="margin-top:8px;">請選擇一筆資料。</div>
+  <div><b>Index</b></div>
+  <div id="list" class="small">No database loaded.</div>
 </div>
 
 </div>
@@ -326,7 +294,7 @@ initSqlJs({
 }).then(function(sql){
   SQL = sql;
   renderL1Options();
-  document.getElementById("state").innerText = "引擎已就緒";
+  document.getElementById("state").innerText = "engine ready";
 });
 
 function createDB(){
@@ -352,7 +320,6 @@ function createDB(){
   `);
 
   renderList();
-  clearDetail();
   updateID();
 }
 
@@ -366,7 +333,6 @@ document.getElementById("file").onchange = function(){
     db = new SQL.Database(data);
     rebuildL1OptionsFromDB();
     renderList();
-    clearDetail();
     updateID();
   };
   r.readAsArrayBuffer(f);
@@ -387,7 +353,7 @@ function renderL1Options(selectedValue = ""){
 
   const placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "請先新增 L1";
+  placeholder.textContent = "Add L1 first";
   sel.appendChild(placeholder);
 
   l1Options.forEach(v => {
@@ -411,7 +377,7 @@ function addL1Option(){
   const value = normalizeL1(input.value);
 
   if(!/^[A-Z]{2}$/.test(value)){
-    alert("L1 必須是兩位英文字母，例如 HM");
+    alert("L1 must be two English letters, such as HM");
     return;
   }
 
@@ -433,24 +399,24 @@ function onL1SelectChange(){
   const l3 = document.getElementById("l3");
 
   if(l1 === "OT"){
-    hint.textContent = "OT 為暫存區，ID 不自動產生，請直接手動輸入，例如 OT-01。";
-    idHint.textContent = "OT 為手動輸入格式，例如 OT-01。";
+    hint.textContent = "OT is the temporary zone. ID is manual input, for example OT-01.";
+    idHint.textContent = "OT uses manual input, for example OT-01.";
     l2.disabled = true;
     l3.disabled = true;
     l2.value = "";
     l3.value = "";
     idInput.readOnly = false;
     idInput.classList.remove("readonly");
-    idInput.placeholder = "例如：OT-01";
+    idInput.placeholder = "e.g. OT-01";
     idInput.value = "";
   }else{
     hint.textContent = "";
-    idHint.textContent = "一般格式：L1-L2-L3-L4，L1～L3 填完會自動產生。";
+    idHint.textContent = "Standard format: L1-L2-L3-L4. ID is generated automatically after L1-L3 are complete.";
     l2.disabled = false;
     l3.disabled = false;
     idInput.readOnly = true;
     idInput.classList.add("readonly");
-    idInput.placeholder = "例如：HM-01-01-0001";
+    idInput.placeholder = "e.g. HM-01-01-0001";
   }
 
   updateID();
@@ -475,7 +441,6 @@ function getAllItems(){
       id, title, ownership, relation, type, created_at,
       cefr, difficulty, status, link, apa, info, notes, tags
     FROM items
-    ORDER BY created_at DESC
   `);
 
   if(!res.length) return [];
@@ -503,6 +468,53 @@ function rebuildL1OptionsFromDB(){
   const fromDB = items.map(x => normalizeL1(x.id.split("-")[0] || "")).filter(Boolean);
   l1Options = Array.from(new Set([...l1Options, ...fromDB])).sort();
   renderL1Options();
+}
+
+function parseIDForSort(id){
+  if(/^OT-\d{2}$/.test(id)){
+    const n = parseInt(id.split("-")[1], 10);
+    return {
+      group: 1,
+      l1: "OT",
+      l2: 0,
+      l3: 0,
+      l4: isNaN(n) ? 0 : n
+    };
+  }
+
+  const m = id.match(/^([A-Z]{2})-(\d{2})-(\d{2})-(\d{4})$/);
+  if(m){
+    return {
+      group: 0,
+      l1: m[1],
+      l2: parseInt(m[2], 10),
+      l3: parseInt(m[3], 10),
+      l4: parseInt(m[4], 10)
+    };
+  }
+
+  return {
+    group: 9,
+    l1: id,
+    l2: 0,
+    l3: 0,
+    l4: 0
+  };
+}
+
+function sortItemsByID(items){
+  return items.sort((a, b) => {
+    const A = parseIDForSort(a.id);
+    const B = parseIDForSort(b.id);
+
+    if(A.group !== B.group) return A.group - B.group;
+    if(A.l1 !== B.l1) return A.l1.localeCompare(B.l1);
+    if(A.l2 !== B.l2) return A.l2 - B.l2;
+    if(A.l3 !== B.l3) return A.l3 - B.l3;
+    if(A.l4 !== B.l4) return A.l4 - B.l4;
+
+    return a.title.localeCompare(b.title);
+  });
 }
 
 function nextSerialFor(l1, l2, l3){
@@ -553,7 +565,7 @@ function isValidID(id){
 
 function add(){
   if(!db){
-    alert("請先建立或載入資料庫");
+    alert("Please create or load a database first.");
     return;
   }
 
@@ -576,39 +588,39 @@ function add(){
   const tags = document.getElementById("tags").value.trim();
 
   if(!title || !id || !ownership || !relation || !type){
-    alert("必填欄位：標題 / ID / 擁有權 / 關聯 / 類型");
+    alert("Required fields: Title / ID / Ownership / Relation / Type");
     return;
   }
 
   if(!l1){
-    alert("請先選擇或新增 L1");
+    alert("Please select or add L1 first.");
     return;
   }
 
   if(l1 !== "OT"){
     if(!/^\d{2}$/.test(l2)){
-      alert("L2 必須是兩位數，例如 01");
+      alert("L2 must be two digits, such as 01");
       return;
     }
 
     if(!/^\d{2}$/.test(l3)){
-      alert("L3 必須是兩位數，例如 01");
+      alert("L3 must be two digits, such as 01");
       return;
     }
   }
 
   if(!isValidID(id)){
-    alert("ID 格式必須是 HM-01-01-0001，或暫存區格式 OT-01");
+    alert("ID must be in the format HM-01-01-0001, or OT-01 for the temporary zone.");
     return;
   }
 
   if(l1 === "OT" && !/^OT-\d{2}$/.test(id)){
-    alert("OT 暫存區格式必須是 OT-兩位數，例如 OT-01");
+    alert("OT format must be OT-xx, such as OT-01");
     return;
   }
 
   if(l1 !== "OT" && !/^[A-Z]{2}-\d{2}-\d{2}-\d{4}$/.test(id)){
-    alert("正式資料 ID 格式必須是 L1-L2-L3-L4，例如 HM-01-01-0001");
+    alert("Standard ID format must be L1-L2-L3-L4, such as HM-01-01-0001");
     return;
   }
 
@@ -631,14 +643,13 @@ function add(){
       ]
     );
   }catch(err){
-    alert("新增失敗，可能是 ID 重複。\n\n" + err.message);
+    alert("Insert failed. The ID may already exist.\n\n" + err.message);
     return;
   }
 
   clearFormKeepStructure();
   rebuildL1OptionsFromDB();
   renderList();
-  showDetailById(id);
   updateID();
 }
 
@@ -667,7 +678,7 @@ function clearFormKeepStructure(){
 
 function renderList(){
   if(!db){
-    document.getElementById("list").innerHTML = '<div class="small">尚未載入資料庫。</div>';
+    document.getElementById("list").innerHTML = '<div class="small">No database loaded.</div>';
     return;
   }
 
@@ -688,19 +699,21 @@ function renderList(){
     });
   }
 
+  items = sortItemsByID(items);
+
   if(!items.length){
-    document.getElementById("list").innerHTML = '<div class="empty">沒有符合的資料。</div>';
+    document.getElementById("list").innerHTML = '<div class="empty">No result.</div>';
     return;
   }
 
   let html = "";
   items.forEach(item => {
     html += `
-      <div class="item" onclick="showDetailById(${JSON.stringify(item.id)})">
+      <div class="item">
         <div class="item-title">${escapeHtml(item.title || "(untitled)")}</div>
-        <div class="item-meta">ID：${escapeHtml(item.id)}</div>
-        <div class="item-meta">標籤：${escapeHtml(item.tags || "")}</div>
-        <div class="item-meta">建立時間：${escapeHtml(item.created_at || "")}</div>
+        <div class="item-meta">ID: ${escapeHtml(item.id)}</div>
+        <div class="item-meta">Tags: ${escapeHtml(item.tags || "")}</div>
+        <div class="item-meta">Creation time: ${escapeHtml(item.created_at || "")}</div>
       </div>
     `;
   });
@@ -708,62 +721,9 @@ function renderList(){
   document.getElementById("list").innerHTML = html;
 }
 
-function showDetailById(id){
-  const items = getAllItems();
-  const item = items.find(x => x.id === id);
-  if(!item) return;
-
-  document.getElementById("detail").innerHTML = `
-    <div class="detail-title">${escapeHtml(item.title)}</div>
-
-    <div class="section-title">狀態</div>
-    <div class="detail-block">
-      <div class="detail-line"><span class="inline-label">ID：</span>${escapeHtml(item.id)}</div>
-      <div class="detail-line"><span class="inline-label">擁有權：</span>${escapeHtml(item.ownership)}</div>
-      <div class="detail-line"><span class="inline-label">關聯：</span>${escapeHtml(item.relation)}</div>
-      <div class="detail-line"><span class="inline-label">類型：</span>${escapeHtml(item.type)}</div>
-      <div class="detail-line"><span class="inline-label">建立時間：</span>${escapeHtml(item.created_at)}</div>
-      <div class="detail-line"><span class="inline-label">CEFR：</span>${escapeHtml(item.cefr)}</div>
-      <div class="detail-line"><span class="inline-label">難度：</span>${escapeHtml(item.difficulty)}</div>
-      <div class="detail-line"><span class="inline-label">進度狀態：</span>${escapeHtml(item.status)}</div>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="section-title">參考資料</div>
-    <div class="detail-block">
-      <div class="detail-line"><span class="inline-label">連結：</span>${
-        item.link
-          ? `<a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">開啟</a>`
-          : ""
-      }</div>
-      <div class="detail-line"><span class="inline-label">APA 格式：</span><br>${nl2br(escapeHtml(item.apa))}</div>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="section-title">資訊</div>
-    <div class="detail-block">${nl2br(escapeHtml(item.info))}</div>
-
-    <div class="hr"></div>
-
-    <div class="section-title">筆記</div>
-    <div class="detail-block">${nl2br(escapeHtml(item.notes))}</div>
-
-    <div class="hr"></div>
-
-    <div class="section-title">標籤</div>
-    <div class="detail-block">${escapeHtml(item.tags)}</div>
-  `;
-}
-
-function clearDetail(){
-  document.getElementById("detail").innerHTML = "請選擇一筆資料。";
-}
-
 function exportDB(){
   if(!db){
-    alert("沒有可下載的資料庫");
+    alert("No database to download.");
     return;
   }
 
@@ -775,10 +735,6 @@ function exportDB(){
   a.click();
 }
 
-function nl2br(str){
-  return String(str).replace(/\n/g, "<br>");
-}
-
 function escapeHtml(str){
   return String(str)
     .replace(/&/g,"&amp;")
@@ -786,14 +742,6 @@ function escapeHtml(str){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-}
-
-function escapeAttr(str){
-  return String(str)
-    .replace(/&/g,"&amp;")
-    .replace(/"/g,"&quot;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
 }
 </script>
 </body>
