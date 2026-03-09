@@ -156,10 +156,10 @@ td.time-cell{
 <div class="box">
   <div><b>Database</b></div>
   <div style="margin-top:8px;">
-    <button onclick="createDB()">Create new DB</button>
+    <button type="button" onclick="createDB()">Create new DB</button>
     <input type="file" id="file" style="margin-top:8px;">
-    <button onclick="exportDB()">Download DB</button>
-    <button onclick="toggleForm()">Add entry</button>
+    <button type="button" onclick="exportDB()">Download DB</button>
+    <button type="button" onclick="toggleForm()">Add entry</button>
   </div>
   <div id="state" class="small">engine loading...</div>
 </div>
@@ -308,7 +308,7 @@ td.time-cell{
     <input id="tags" placeholder="#tag1 #tag2">
   </div>
 
-  <button onclick="add()">Save</button>
+  <button type="button" onclick="add()">Save</button>
 </div>
 
 <div class="box">
@@ -351,6 +351,11 @@ function setState(text){
 }
 
 function createDB(){
+  if(!SQL){
+    alert("SQL engine is not ready yet.");
+    return;
+  }
+
   db = new SQL.Database();
   db.run(`
     CREATE TABLE IF NOT EXISTS items (
@@ -370,24 +375,38 @@ function createDB(){
       tags TEXT
     )
   `);
+
   rebuildL1OptionsFromDB();
   renderList();
   clearEditor();
   updateID();
+  setState("new database created");
 }
 
 document.getElementById("file").onchange = function(){
   const f = this.files[0];
   if(!f) return;
 
+  if(!SQL){
+    alert("SQL engine is not ready yet.");
+    return;
+  }
+
   const r = new FileReader();
   r.onload = function(){
-    const data = new Uint8Array(r.result);
-    db = new SQL.Database(data);
-    rebuildL1OptionsFromDB();
-    renderList();
-    clearEditor();
-    updateID();
+    try{
+      const data = new Uint8Array(r.result);
+      db = new SQL.Database(data);
+      rebuildL1OptionsFromDB();
+      renderList();
+      clearEditor();
+      updateID();
+      setState("database loaded: " + f.name);
+    }catch(err){
+      console.error(err);
+      alert("Failed to load database file.");
+      setState("database load failed");
+    }
   };
   r.readAsArrayBuffer(f);
 };
@@ -406,7 +425,7 @@ function rebuildL1OptionsFromDB(selectedValue = ""){
   if(!sel) return;
 
   const items = getAllItems();
-  const fromDB = items.map(x => normalizeL1(x.id.split("-")[0] || "")).filter(Boolean);
+  const fromDB = items.map(x => normalizeL1((x.id || "").split("-")[0] || "")).filter(Boolean);
   l1Options = Array.from(new Set([...l1Options, ...fromDB])).sort();
 
   sel.innerHTML = "";
@@ -525,7 +544,7 @@ function getAllItems(){
 function parseIDForSort(id){
   if(/^OT-\d{2}$/.test(id)){
     const n = parseInt(id.split("-")[1], 10);
-    return { group:-1, l1:"OT", l2:0, l3:0, l4:isNaN(n)?0:n };
+    return { group:-1, l1:"OT", l2:0, l3:0, l4:isNaN(n) ? 0 : n };
   }
 
   const m = id.match(/^([A-Z]{2})-(\d{2})-(\d{2})-(\d{4})$/);
@@ -719,8 +738,10 @@ function clearFormKeepStructure(){
 }
 
 function renderList(){
+  const listEl = document.getElementById("list");
+
   if(!db){
-    document.getElementById("list").innerHTML = '<div class="small">No database loaded.</div>';
+    listEl.innerHTML = '<div class="small">No database loaded.</div>';
     return;
   }
 
@@ -729,7 +750,14 @@ function renderList(){
 
   if(q){
     items = items.filter(item => {
-      const text = [item.title, item.id, item.tags, item.info, item.notes, item.apa].join(" ").toLowerCase();
+      const text = [
+        item.title,
+        item.id,
+        item.tags,
+        item.info,
+        item.notes,
+        item.apa
+      ].join(" ").toLowerCase();
       return text.includes(q);
     });
   }
@@ -737,7 +765,7 @@ function renderList(){
   items = sortItemsByID(items);
 
   if(!items.length){
-    document.getElementById("list").innerHTML = '<div class="empty">No result.</div>';
+    listEl.innerHTML = '<div class="empty">No result.</div>';
     return;
   }
 
@@ -775,7 +803,7 @@ function renderList(){
     html += `
       <tr>
         <td class="title-cell">
-          <span class="title-link" onclick="openEditor(${JSON.stringify(item.id)})">${escapeHtml(item.title || "")}</span>
+          <span class="title-link" data-id="${escapeAttr(item.id)}">${escapeHtml(item.title || "")}</span>
         </td>
         <td>${escapeHtml(item.id || "")}</td>
         <td class="tags-cell">${escapeHtml(item.tags || "")}</td>
@@ -785,7 +813,14 @@ function renderList(){
   });
 
   html += `</tbody></table></div>`;
-  document.getElementById("list").innerHTML = html;
+  listEl.innerHTML = html;
+
+  listEl.querySelectorAll(".title-link").forEach(el => {
+    el.addEventListener("click", function(){
+      const id = this.dataset.id;
+      openEditor(id);
+    });
+  });
 }
 
 function openEditor(id){
@@ -909,17 +944,17 @@ function openEditor(id){
       <input id="edit_tags" value="${escapeAttr(item.tags)}">
     </div>
 
-    <button onclick="saveEditor()">Save changes</button>
-    <button onclick="clearEditor()">Close</button>
+    <button type="button" onclick="saveEditor()">Save changes</button>
+    <button type="button" onclick="clearEditor()">Close</button>
     <div id="edit_msg" class="small"></div>
   `;
 
-  document.getElementById("edit_ownership").value = item.ownership;
-  document.getElementById("edit_relation").value = item.relation;
-  document.getElementById("edit_type").value = item.type;
-  document.getElementById("edit_cefr").value = item.cefr;
-  document.getElementById("edit_difficulty").value = item.difficulty;
-  document.getElementById("edit_status").value = item.status;
+  document.getElementById("edit_ownership").value = item.ownership || "";
+  document.getElementById("edit_relation").value = item.relation || "";
+  document.getElementById("edit_type").value = item.type || "";
+  document.getElementById("edit_cefr").value = item.cefr || "";
+  document.getElementById("edit_difficulty").value = item.difficulty || "";
+  document.getElementById("edit_status").value = item.status || "";
 }
 
 function saveEditor(){
@@ -1003,10 +1038,17 @@ function exportDB(){
 
   const data = db.export();
   const blob = new Blob([data], {type:"application/octet-stream"});
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = "catalog.db";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 function escapeHtml(str){
