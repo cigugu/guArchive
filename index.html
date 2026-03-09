@@ -126,6 +126,9 @@ button:hover{
   flex-wrap:wrap;
   align-items:center;
 }
+.readonly{
+  background:#f1f1f1;
+}
 @media (min-width: 780px){
   .grid2{
     grid-template-columns:1fr 1fr;
@@ -192,7 +195,7 @@ button:hover{
   <div class="row">
     <label>ID !!</label>
     <input id="id" placeholder="例如：HM-01-01-0001 或 OT-01">
-    <div class="small">一般格式：L1-L2-L3-L4。暫存區例外：OT-兩位數。</div>
+    <div id="idHint" class="small">一般格式：L1-L2-L3-L4。暫存區 OT 由你手動輸入，例如 OT-01。</div>
   </div>
 
   <div class="grid2">
@@ -424,15 +427,30 @@ function addL1Option(){
 function onL1SelectChange(){
   const l1 = normalizeL1(document.getElementById("l1Select").value);
   const hint = document.getElementById("otHint");
+  const idInput = document.getElementById("id");
+  const idHint = document.getElementById("idHint");
+  const l2 = document.getElementById("l2");
+  const l3 = document.getElementById("l3");
 
   if(l1 === "OT"){
-    hint.textContent = "OT 為暫存區，ID 格式使用 OT-兩位數字。L2 / L3 不使用。";
-    document.getElementById("l2").disabled = true;
-    document.getElementById("l3").disabled = true;
+    hint.textContent = "OT 為暫存區，ID 不自動產生，請直接手動輸入，例如 OT-01。";
+    idHint.textContent = "OT 為手動輸入格式，例如 OT-01。";
+    l2.disabled = true;
+    l3.disabled = true;
+    l2.value = "";
+    l3.value = "";
+    idInput.readOnly = false;
+    idInput.classList.remove("readonly");
+    idInput.placeholder = "例如：OT-01";
+    idInput.value = "";
   }else{
     hint.textContent = "";
-    document.getElementById("l2").disabled = false;
-    document.getElementById("l3").disabled = false;
+    idHint.textContent = "一般格式：L1-L2-L3-L4，L1~L3 填完會自動產生。";
+    l2.disabled = false;
+    l3.disabled = false;
+    idInput.readOnly = true;
+    idInput.classList.add("readonly");
+    idInput.placeholder = "例如：HM-01-01-0001";
   }
 
   updateID();
@@ -505,45 +523,28 @@ function nextSerialFor(l1, l2, l3){
   return String(maxNum + 1).padStart(4, "0");
 }
 
-function nextOTSerial(){
-  if(!db) return "01";
-
-  const items = getAllItems().filter(x => /^OT-\d{2}$/.test(x.id));
-  let maxNum = 0;
-
-  items.forEach(item => {
-    const parts = item.id.split("-");
-    if(parts.length === 2){
-      const n = parseInt(parts[1], 10);
-      if(!isNaN(n) && n > maxNum) maxNum = n;
-    }
-  });
-
-  return String(maxNum + 1).padStart(2, "0");
-}
-
 function updateID(){
   const l1 = normalizeL1(document.getElementById("l1Select").value);
   const l2 = document.getElementById("l2").value.trim();
   const l3 = document.getElementById("l3").value.trim();
+  const idInput = document.getElementById("id");
 
   if(!l1){
-    document.getElementById("id").value = "";
+    idInput.value = "";
     return;
   }
 
   if(l1 === "OT"){
-    document.getElementById("id").value = `OT-${nextOTSerial()}`;
     return;
   }
 
   if(!/^\d{2}$/.test(l2) || !/^\d{2}$/.test(l3)){
-    document.getElementById("id").value = "";
+    idInput.value = "";
     return;
   }
 
   const serial = nextSerialFor(l1, l2, l3);
-  document.getElementById("id").value = `${l1}-${l2}-${l3}-${serial}`;
+  idInput.value = `${l1}-${l2}-${l3}-${serial}`;
 }
 
 function isValidID(id){
@@ -655,9 +656,12 @@ function clearFormKeepStructure(){
   document.getElementById("notes").value = "";
   document.getElementById("tags").value = "";
 
-  if(document.getElementById("l1Select").value !== "OT"){
+  if(document.getElementById("l1Select").value === "OT"){
+    document.getElementById("id").value = "";
+  }else{
     document.getElementById("l2").value = "";
     document.getElementById("l3").value = "";
+    document.getElementById("id").value = "";
   }
 }
 
