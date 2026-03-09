@@ -220,7 +220,7 @@ td.time-cell{
         <label>Add new field</label>
         <div class="inline-tools">
           <input id="newL1" placeholder="e.g. HM" maxlength="2" style="flex:1;">
-          <button type="button" onclick="addL1Option()">Add L1</button>
+          <button type="button" onclick="addL1Option()">Add</button>
         </div>
       </div>
     </div>
@@ -320,7 +320,7 @@ td.time-cell{
 
     <div class="row">
       <label>Links</label>
-      <input id="link" placeholder="Cloud folder link / URL">
+      <textarea id="link" placeholder="One link per line"></textarea>
     </div>
 
     <div class="row">
@@ -726,10 +726,10 @@ function add(){
   const notes = document.getElementById("notes").value.trim();
   const tags = document.getElementById("tags").value.trim();
 
-  if(!title || !id || !ownership || !relation || !type){
-    alert("Required fields: Title / ID / Ownership / Relation / Type");
-    return;
-  }
+  if(!title || !id){
+  alert("Required fields: Title / ID");
+  return;
+}
 
   if(!l1){
     alert("Please select or add L1 first.");
@@ -1009,7 +1009,7 @@ function openEditor(id){
 
     <div class="row">
       <label>Links</label>
-      <input id="edit_link" value="${escapeAttr(item.link)}">
+      <textarea id="edit_link">${escapeHtml(item.link)}</textarea>
     </div>
 
     <div class="row">
@@ -1067,7 +1067,7 @@ function saveEditor(){
     tags: document.getElementById("edit_tags").value.trim()
   };
 
-  if(!payload.title || !payload.id || !payload.ownership || !payload.relation || !payload.type){
+  if(!payload.title || !payload.id){
     document.getElementById("edit_msg").textContent = "Required fields: Title / ID / Ownership / Relation / Type";
     return;
   }
