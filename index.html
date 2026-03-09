@@ -117,6 +117,46 @@ td.tags-cell{
 td.time-cell{
   min-width:170px;
 }
+.group-row td{
+  background:#e9e9e9;
+  font-weight:bold;
+}
+.subgroup-row td{
+  background:#f7f7f7;
+  font-weight:bold;
+}
+.title-link{
+  color:#111;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.title-link:hover{
+  background:#f0f0f0;
+}
+.detail-title{
+  font-size:20px;
+  font-weight:bold;
+  margin-bottom:12px;
+}
+.section-title{
+  font-weight:bold;
+  margin:14px 0 8px 0;
+}
+.detail-block{
+  margin-bottom:10px;
+}
+.detail-line{
+  margin-bottom:6px;
+  line-height:1.6;
+  white-space:normal;
+}
+.inline-label{
+  font-weight:bold;
+}
+.hr{
+  border-top:1px solid #ddd;
+  margin:10px 0;
+}
 @media (max-width: 779px){
   th, td{
     font-size:12px;
@@ -303,6 +343,11 @@ td.time-cell{
   <div id="list" class="small">No database loaded.</div>
 </div>
 
+<div class="box">
+  <div><b>Detail</b></div>
+  <div id="detail" class="small" style="margin-top:8px;">Select a title.</div>
+</div>
+
 </div>
 
 <script>
@@ -341,6 +386,7 @@ function createDB(){
   `);
 
   renderList();
+  clearDetail();
   updateID();
 }
 
@@ -354,6 +400,7 @@ document.getElementById("file").onchange = function(){
     db = new SQL.Database(data);
     rebuildL1OptionsFromDB();
     renderList();
+    clearDetail();
     updateID();
   };
   r.readAsArrayBuffer(f);
@@ -538,6 +585,24 @@ function sortItemsByID(items){
   });
 }
 
+function getGroupKey(item){
+  if(/^OT-\d{2}$/.test(item.id)){
+    return { l1: "OT", l2: null, label1: "OT", label2: null };
+  }
+
+  const m = item.id.match(/^([A-Z]{2})-(\d{2})-(\d{2})-(\d{4})$/);
+  if(m){
+    return {
+      l1: m[1],
+      l2: m[2],
+      label1: m[1],
+      label2: `${m[1]}-${m[2]}`
+    };
+  }
+
+  return { l1: "OTHER", l2: null, label1: "OTHER", label2: null };
+}
+
 function nextSerialFor(l1, l2, l3){
   if(!db) return "0001";
 
@@ -671,6 +736,7 @@ function add(){
   clearFormKeepStructure();
   rebuildL1OptionsFromDB();
   renderList();
+  showDetailById(id);
   updateID();
 }
 
@@ -741,10 +807,38 @@ function renderList(){
         <tbody>
   `;
 
+  let currentL1 = null;
+  let currentL2 = null;
+
   items.forEach(item => {
+    const g = getGroupKey(item);
+
+    if(g.l1 !== currentL1){
+      currentL1 = g.l1;
+      currentL2 = null;
+      html += `
+        <tr class="group-row">
+          <td colspan="4">L1: ${escapeHtml(g.label1)}</td>
+        </tr>
+      `;
+    }
+
+    if(g.label2 && g.l2 !== currentL2){
+      currentL2 = g.l2;
+      html += `
+        <tr class="subgroup-row">
+          <td colspan="4">L2: ${escapeHtml(g.label2)}</td>
+        </tr>
+      `;
+    }
+
     html += `
       <tr>
-        <td class="title-cell">${escapeHtml(item.title || "")}</td>
+        <td class="title-cell">
+          <span class="title-link" onclick="showDetailById(${JSON.stringify(item.id)})">
+            ${escapeHtml(item.title || "")}
+          </span>
+        </td>
         <td>${escapeHtml(item.id || "")}</td>
         <td class="tags-cell">${escapeHtml(item.tags || "")}</td>
         <td class="time-cell">${escapeHtml(item.created_at || "")}</td>
@@ -761,28 +855,6 @@ function renderList(){
   document.getElementById("list").innerHTML = html;
 }
 
-function exportDB(){
-  if(!db){
-    alert("No database to download.");
-    return;
-  }
-
-  const data = db.export();
-  const blob = new Blob([data], {type:"application/octet-stream"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "catalog.db";
-  a.click();
-}
-
-function escapeHtml(str){
-  return String(str)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-}
-</script>
-</body>
-</html>
+function showDetailById(id){
+  const items = getAllItems();
+  const item = items.find(x => x.
