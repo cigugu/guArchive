@@ -394,6 +394,9 @@ let db;
 let l1Options = [];
 let currentEditId = null;
 
+/* cache */
+let cacheItems = null;
+
 initSqlJs({
   locateFile: file => "./" + file
 }).then(function(sql){
@@ -414,6 +417,7 @@ function createDB(){
   if(!SQL){
     alert("SQL engine is not ready yet.");
     return;
+    cacheItems = null;
   }
 
   db = new SQL.Database();
@@ -586,6 +590,11 @@ function nowText(){
 }
 
 function getAllItems(){
+
+  if(cacheItems){
+    return cacheItems;
+  }
+
   if(!db) return [];
 
   const res = db.exec(`
@@ -594,6 +603,31 @@ function getAllItems(){
       cefr, difficulty, status, link, apa, info, notes, tags
     FROM items
   `);
+
+  if(!res.length){
+    cacheItems = [];
+    return cacheItems;
+  }
+
+  cacheItems = res[0].values.map(row => ({
+    id: row[0] || "",
+    title: row[1] || "",
+    ownership: row[2] || "",
+    relation: row[3] || "",
+    type: row[4] || "",
+    created_at: row[5] || "",
+    cefr: row[6] || "",
+    difficulty: row[7] || "",
+    status: row[8] || "",
+    link: row[9] || "",
+    apa: row[10] || "",
+    info: row[11] || "",
+    notes: row[12] || "",
+    tags: row[13] || ""
+  }));
+
+  return cacheItems;
+}
 
   if(!res.length) return [];
 
@@ -786,6 +820,7 @@ function add(){
   renderList();
   clearEditor();
   updateID();
+  cacheItems = null;
 }
 
 function clearFormKeepStructure(){
@@ -821,8 +856,19 @@ function renderList(){
 
   let items = getAllItems();
   const q = document.getElementById("search").value.toLowerCase().trim();
+  let tagFilter = null;
 
-  if(q){
+if(q.startsWith("tag:")){
+  tagFilter = q.slice(4).trim();
+}
+
+  if(tagFilter){
+  items = items.filter(item => {
+    const tags = parseTags(item.tags).map(t => t.toLowerCase());
+    return tags.includes(tagFilter);
+  });
+}
+else if(q){
     items = items.filter(item => {
       const text = [
         item.title,
@@ -899,9 +945,12 @@ function renderList(){
 
 function renderDetailMeta(item){
   const detailMeta = document.getElementById("detailMeta");
-  const linkHtml = item.link
-    ? `<div style="margin-top:8px;"><b>Link:</b> <a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.link)}</a></div>`
-    : `<div style="margin-top:8px;"><b>Link:</b> <span class="small">blank</span></div>`;
+ const linkHtml = `
+<div style="margin-top:8px;">
+<b>Links:</b>
+${renderLinks(item.link)}
+</div>
+`;
 
   detailMeta.innerHTML = `
     <div style="margin-bottom:8px;"><b>${escapeHtml(item.title || "")}</b></div>
@@ -1122,7 +1171,7 @@ function saveEditor(){
     if(updatedItem){
       renderDetailMeta(updatedItem);
     }
-
+cacheItems = null;
     document.getElementById("edit_msg").textContent = "Saved.";
     renderList();
   }catch(err){
@@ -1199,7 +1248,25 @@ function searchByTag(tag){
   document.getElementById("search").value = tag;
   renderList();
 }
-  
+  function parseLines(text){
+  return String(text || "")
+    .split(/\n+/)
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function renderLinks(text){
+  const lines = parseLines(text);
+
+  if(!lines.length){
+    return `<span class="small">blank</span>`;
+  }
+
+  return lines.map(l=>{
+    const url = escapeAttr(l);
+    return `<div><a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(l)}</a></div>`;
+  }).join("");
+}
 </script>
 </body>
 </html>
