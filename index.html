@@ -417,9 +417,9 @@ function createDB(){
   if(!SQL){
     alert("SQL engine is not ready yet.");
     return;
-    cacheItems = null;
+    
   }
-
+cacheItems = null;
   db = new SQL.Database();
   db.run(`
     CREATE TABLE IF NOT EXISTS items (
@@ -627,26 +627,6 @@ function getAllItems(){
   }));
 
   return cacheItems;
-}
-
-  if(!res.length) return [];
-
-  return res[0].values.map(row => ({
-    id: row[0] || "",
-    title: row[1] || "",
-    ownership: row[2] || "",
-    relation: row[3] || "",
-    type: row[4] || "",
-    created_at: row[5] || "",
-    cefr: row[6] || "",
-    difficulty: row[7] || "",
-    status: row[8] || "",
-    link: row[9] || "",
-    apa: row[10] || "",
-    info: row[11] || "",
-    notes: row[12] || "",
-    tags: row[13] || ""
-  }));
 }
 
 function parseIDForSort(id){
