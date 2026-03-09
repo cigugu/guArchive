@@ -1,152 +1,230 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地獄級文獻管理系統 - 穩定版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
-    <style>
-        body { font-family: monospace; background: #e0e0e0; padding: 20px; color: #333; }
-        .container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .editor { background: #fff; padding: 15px; border: 2px solid #000; width: 400px; }
-        .viewer { flex-grow: 1; background: #fff; padding: 15px; border: 2px solid #000; min-width: 300px; }
-        input, select, textarea { width: 100%; margin-bottom: 10px; font-family: monospace; box-sizing: border-box; }
-        label { font-weight: bold; font-size: 12px; display: block; margin-top: 5px; }
-        button { cursor: pointer; margin-top: 10px; width: 100%; padding: 10px; background: #ddd; border: 2px solid #000; font-weight: bold; }
-        button:hover { background: #bbb; }
-        button:disabled { background: #eee; color: #999; cursor: not-allowed; }
-        table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 10px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
-        th { background: #eee; }
-        .status-bar { background: #000; color: #fff; padding: 10px; margin-bottom: 10px; font-size: 12px; }
-    </style>
+<meta charset="UTF-8">
+<title>Reference Catalog Test</title>
+
+<script src="sql-wasm.js"></script>
+
+<style>
+
+body{
+font-family:monospace;
+background:#f5f5f5;
+padding:30px;
+}
+
+h1{
+margin-bottom:10px;
+}
+
+.box{
+background:white;
+padding:15px;
+border:2px solid black;
+margin-bottom:20px;
+}
+
+input,textarea{
+width:100%;
+margin:5px 0;
+font-family:monospace;
+}
+
+button{
+padding:8px;
+margin-top:5px;
+cursor:pointer;
+}
+
+table{
+border-collapse:collapse;
+width:100%;
+margin-top:10px;
+}
+
+td,th{
+border:1px solid black;
+padding:5px;
+}
+
+</style>
 </head>
+
 <body>
 
-<div class="status-bar">STATUS: <span id="db-state">🔴 正在連接雲端引擎...</span></div>
+<h1>Personal Reference Catalog (test)</h1>
 
-<div class="container">
-    <div class="editor">
-        <label>1. 初始化 / 載入</label>
-        <button id="btn-create" onclick="createNewDB()" disabled>✨ 點我建立全新資料庫檔案</button>
-        <input type="file" id="dbfile" accept=".db">
-        <hr>
-        <label>2. 輸入資料</label>
-        <input type="text" id="title" placeholder="在此輸入標題">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div>
-                <label>Ownership</label>
-                <select id="ownership"><option>mine</option><option>other</option><option>collaborative</option></select>
-                <label>Relation</label>
-                <select id="relation"><option>general</option><option>work</option><option>personal</option></select>
-            </div>
-            <div>
-                <label>CEFR</label>
-                <select id="cefr"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select>
-                <label>Status</label>
-                <select id="status"><option>planned</option><option>in_progress</option><option>completed</option></select>
-            </div>
-        </div>
-        <label>Links</label>
-        <input type="text" id="links">
-        <label>Notes</label>
-        <textarea id="notes" rows="4"></textarea>
+<div class="box">
 
-        <button id="btn-add" onclick="addEntry()" style="background: #ccffcc;" disabled>🔥 存入記憶體資料庫</button>
-        <button id="btn-export" onclick="exportDB()" style="background: #ffcccc;" disabled>💾 下載更新後的 .db</button>
-    </div>
+<b>Database</b><br>
 
-    <div class="viewer">
-        <input type="text" id="search" placeholder="搜尋標題..." oninput="renderTable()">
-        <div id="table-container">引擎就緒後，載入資料庫即可顯示內容</div>
-    </div>
+<button onclick="createDB()">Create new DB</button>
+
+<input type="file" id="file">
+
+<button onclick="exportDB()">Download DB</button>
+
+<div id="state">engine loading...</div>
+
+</div>
+
+<div class="box">
+
+<b>Add entry</b>
+
+<input id="id" placeholder="ID (ex: WR-01-02-0042)">
+<input id="title" placeholder="title">
+<input id="link" placeholder="link">
+<input id="tag" placeholder="tag (optional)">
+<textarea id="notes" placeholder="notes"></textarea>
+
+<button onclick="add()">Add</button>
+
+</div>
+
+<div class="box">
+
+<b>Search</b>
+
+<input id="search" placeholder="keyword search" oninput="render()">
+
+<div id="table"></div>
+
 </div>
 
 <script>
-    let db;
-    // 強制指定 WASM 檔案的路徑
-    const SQL_CONFIG = { 
-        locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}` 
-    };
 
-    // 啟動引擎
-    window.onload = function() {
-        if (typeof initSqljs === 'function') {
-            initSqljs(SQL_CONFIG).then(function(SQL) {
-                window.SQL = SQL;
-                document.getElementById('db-state').innerText = "🟢 引擎已就緒，請建立或載入資料庫";
-                document.getElementById('btn-create').disabled = false;
-                document.getElementById('btn-add').disabled = false;
-                document.getElementById('btn-export').disabled = false;
-            }).catch(e => {
-                document.getElementById('db-state').innerText = "❌ 引擎啟動失敗: " + e;
-            });
-        } else {
-            document.getElementById('db-state').innerText = "❌ 無法下載引擎，請確認網路或重新整理";
-        }
-    };
+let SQL
+let db
 
-    function createNewDB() {
-        db = new window.SQL.Database();
-        db.run(`CREATE TABLE literature (id INTEGER PRIMARY KEY, title TEXT, ownership TEXT, relation TEXT, cefr TEXT, status TEXT, links TEXT, notes TEXT)`);
-        document.getElementById('db-state').innerText = "✅ 已建立全新資料庫";
-        renderTable();
-    }
+initSqlJs({
+locateFile:file=>file
+}).then(function(sql){
 
-    document.getElementById('dbfile').onchange = function() {
-        const f = this.files[0];
-        const r = new FileReader();
-        r.onload = function() {
-            const Uints = new Uint8Array(r.result);
-            db = new window.SQL.Database(Uints);
-            document.getElementById('db-state').innerText = "✅ 已掛載: " + f.name;
-            renderTable();
-        }
-        r.readAsArrayBuffer(f);
-    };
+SQL = sql
 
-    function addEntry() {
-        if(!db) return alert("請先建立或載入資料庫！");
-        const vals = [
-            document.getElementById('title').value || "未命名",
-            document.getElementById('ownership').value,
-            document.getElementById('relation').value,
-            document.getElementById('cefr').value,
-            document.getElementById('status').value,
-            document.getElementById('links').value,
-            document.getElementById('notes').value
-        ];
-        db.run("INSERT INTO literature (title, ownership, relation, cefr, status, links, notes) VALUES (?,?,?,?,?,?,?)", vals);
-        renderTable();
-        alert("已成功存入記憶體！");
-    }
+document.getElementById("state").innerText="engine ready"
 
-    function renderTable() {
-        if(!db) return;
-        try {
-            const res = db.exec("SELECT * FROM literature ORDER BY id DESC");
-            let html = "<table><tr><th>ID</th><th>標題</th><th>狀態</th><th>筆記</th></tr>";
-            if (res.length > 0) {
-                res[0].values.forEach(row => {
-                    html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[5]}</td><td>${row[7]}</td></tr>`;
-                });
-            }
-            html += "</table>";
-            document.getElementById('table-container').innerHTML = html;
-        } catch(e) {
-            console.log("資料表可能尚未建立");
-        }
-    }
+})
 
-    function exportDB() {
-        if(!db) return;
-        const data = db.export();
-        const blob = new Blob([data]);
-        const a = document.createElement("a");
-        a.href = window.URL.createObjectURL(blob);
-        a.download = "literature.db";
-        a.click();
-    }
+function createDB(){
+
+db = new SQL.Database()
+
+db.run(`
+CREATE TABLE items(
+id TEXT PRIMARY KEY,
+title TEXT,
+link TEXT,
+tag TEXT,
+notes TEXT
+)
+`)
+
+render()
+
+}
+
+document.getElementById("file").onchange=function(){
+
+let f=this.files[0]
+
+let r=new FileReader()
+
+r.onload=function(){
+
+let data=new Uint8Array(r.result)
+
+db=new SQL.Database(data)
+
+render()
+
+}
+
+r.readAsArrayBuffer(f)
+
+}
+
+function add(){
+
+if(!db){
+alert("create db first")
+return
+}
+
+let id=document.getElementById("id").value
+let title=document.getElementById("title").value
+let link=document.getElementById("link").value
+let tag=document.getElementById("tag").value
+let notes=document.getElementById("notes").value
+
+db.run(
+"INSERT INTO items VALUES (?,?,?,?,?)",
+[id,title,link,tag,notes]
+)
+
+render()
+
+}
+
+function render(){
+
+if(!db)return
+
+let q=document.getElementById("search").value.toLowerCase()
+
+let res=db.exec("SELECT * FROM items")
+
+let html="<table>"
+html+="<tr><th>ID</th><th>Title</th><th>Tag</th><th>Link</th></tr>"
+
+if(res.length){
+
+res[0].values.forEach(row=>{
+
+let text=(row.join(" ")).toLowerCase()
+
+if(!text.includes(q))return
+
+html+=`
+<tr>
+<td>${row[0]}</td>
+<td>${row[1]}</td>
+<td>${row[3]}</td>
+<td><a href="${row[2]}" target="_blank">open</a></td>
+</tr>
+`
+
+})
+
+}
+
+html+="</table>"
+
+document.getElementById("table").innerHTML=html
+
+}
+
+function exportDB(){
+
+if(!db)return
+
+let data=db.export()
+
+let blob=new Blob([data])
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="catalog.db"
+
+a.click()
+
+}
+
 </script>
+
 </body>
 </html>
