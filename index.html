@@ -168,7 +168,7 @@ const DB_STORAGE_KEY = "catalog_db_binary_v1";
 const EDIT_ID_KEY = "catalog_open_edit_id";
 
 initSqlJs({
-  locateFile: file => file
+  locateFile: file => "./" + file
 }).then(function(sql){
   SQL = sql;
   loadDBFromLocalStorage();
