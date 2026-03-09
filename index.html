@@ -63,27 +63,48 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+
 <script>
     let db;
-    // 指向更可靠的 WASM 位置
-    const SQL_CONFIG = { locateFile: filename => `https://sql.js.org/dist/${filename}` };
+    // 這是關鍵：手動指定 WASM 檔案的位置
+    const SQL_CONFIG = { 
+        locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}` 
+    };
+
+    // 增加一個檢查機制
+    function checkEngine() {
+        if (typeof initSqljs === 'undefined') {
+            alert("❌ 引擎尚未就緒，請檢查網路連線或重新整理網頁。");
+            return false;
+        }
+        return true;
+    }
 
     // 初始化引擎
-    initSqljs(SQL_CONFIG).then(function(SQL){
-        window.SQL = SQL;
-        document.getElementById('db-state').innerText = "🟢 引擎已就緒，請載入或建立資料庫";
-    }).catch(err => {
-        document.getElementById('db-state').innerText = "❌ 引擎載入失敗: " + err;
-    });
+    window.onload = () => {
+        if (typeof initSqljs !== 'undefined') {
+            initSqljs(SQL_CONFIG).then(SQL => {
+                window.SQL = SQL;
+                document.getElementById('db-state').innerText = "🟢 引擎已就緒，請載入或建立資料庫";
+            }).catch(err => {
+                document.getElementById('db-state').innerText = "❌ 引擎啟動失敗: " + err;
+            });
+        } else {
+            document.getElementById('db-state').innerText = "❌ 無法從雲端載入引擎，請重新整理";
+        }
+    };
 
     function createNewDB() {
+        if (!checkEngine()) return;
         db = new window.SQL.Database();
         db.run(`CREATE TABLE literature (id INTEGER PRIMARY KEY, title TEXT, ownership TEXT, relation TEXT, cefr TEXT, status TEXT, links TEXT, notes TEXT)`);
-        document.getElementById('db-state').innerText = "✅ 已建立全新記憶體資料庫";
+        document.getElementById('db-state').innerText = "✅ 已建立全新資料庫";
         renderTable();
     }
 
     document.getElementById('dbfile').onchange = function() {
+        if (!checkEngine()) return;
         const f = this.files[0];
         const r = new FileReader();
         r.onload = function() {
@@ -108,22 +129,28 @@
         ];
         db.run("INSERT INTO literature (title, ownership, relation, cefr, status, links, notes) VALUES (?,?,?,?,?,?,?)", vals);
         renderTable();
+        alert("已存入記憶體！");
     }
 
     function renderTable() {
         if(!db) return;
-        const res = db.exec("SELECT * FROM literature ORDER BY id DESC");
-        let html = "<table><tr><th>ID</th><th>標題</th><th>狀態</th><th>筆記</th></tr>";
-        if (res.length > 0) {
-            res[0].values.forEach(row => {
-                html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[4]}</td><td>${row[7]}</td></tr>`;
-            });
+        try {
+            const res = db.exec("SELECT * FROM literature ORDER BY id DESC");
+            let html = "<table><tr><th>ID</th><th>標題</th><th>狀態</th><th>筆記</th></tr>";
+            if (res.length > 0) {
+                res[0].values.forEach(row => {
+                    html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[5]}</td><td>${row[7]}</td></tr>`;
+                });
+            }
+            html += "</table>";
+            document.getElementById('table-container').innerHTML = html;
+        } catch (e) {
+            console.log("表格渲染失敗，可能資料表尚未建立");
         }
-        html += "</table>";
-        document.getElementById('table-container').innerHTML = html;
     }
 
     function exportDB() {
+        if(!db) return;
         const data = db.export();
         const blob = new Blob([data]);
         const a = document.createElement("a");
@@ -134,3 +161,4 @@
 </script>
 </body>
 </html>
+
