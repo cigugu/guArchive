@@ -69,7 +69,7 @@ button:hover{
   line-height:1.5;
 }
 .hidden{
-  display:none;
+  display:none !important;
 }
 .empty{
   color:#666;
@@ -135,6 +135,40 @@ td.time-cell{
 .title-link:hover{
   background:#f0f0f0;
 }
+.detail-header{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.detail-title{
+  font-size:18px;
+  font-weight:bold;
+}
+.meta-box{
+  border:1px solid #222;
+  padding:10px;
+  background:#fafafa;
+  margin-bottom:12px;
+}
+.badge-line{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.badge{
+  display:inline-block;
+  border:1px solid #222;
+  padding:3px 8px;
+  background:#fff;
+  font-size:12px;
+}
+.section-title{
+  font-size:16px;
+  margin:0 0 10px 0;
+}
 @media (max-width: 779px){
   th, td{
     font-size:12px;
@@ -153,177 +187,192 @@ td.time-cell{
 
 <h1>Personal Reference Catalog</h1>
 
-<div class="box">
-  <div><b>Database</b></div>
-  <div style="margin-top:8px;">
-    <button type="button" onclick="createDB()">Create new DB</button>
-    <input type="file" id="file" style="margin-top:8px;">
-    <button type="button" onclick="exportDB()">Download DB</button>
-    <button type="button" onclick="toggleForm()">Add entry</button>
-  </div>
-  <div id="state" class="small">engine loading...</div>
-</div>
-
-<div id="formBox" class="box hidden">
-  <div><b>New Entry</b></div>
-
-  <div class="row">
-    <label>Title<span class="req">*</span></label>
-    <input id="title" placeholder="Enter title here">
+<div id="indexView">
+  <div class="box">
+    <div><b>Database</b></div>
+    <div style="margin-top:8px;">
+      <button type="button" onclick="createDB()">Create new DB</button>
+      <input type="file" id="file" style="margin-top:8px;">
+      <button type="button" onclick="exportDB()">Download DB</button>
+      <button type="button" onclick="toggleForm()">Add entry</button>
+    </div>
+    <div id="state" class="small">engine loading...</div>
   </div>
 
-  <div class="grid2">
+  <div id="formBox" class="box hidden">
+    <div><b>New Entry</b></div>
+
     <div class="row">
-      <label>Field</label>
-      <select id="l1Select" onchange="onL1SelectChange()">
-        <option value="">Add L1 first</option>
-      </select>
-      <div class="small">L1 must be two English letters, such as HM, LG, WR. OT is the temporary zone exception.</div>
+      <label>Title<span class="req">*</span></label>
+      <input id="title" placeholder="Enter title here">
     </div>
 
-    <div class="row">
-      <label>Add new field</label>
-      <div class="inline-tools">
-        <input id="newL1" placeholder="e.g. HM" maxlength="2" style="flex:1;">
-        <button type="button" onclick="addL1Option()">Add L1</button>
+    <div class="grid2">
+      <div class="row">
+        <label>Field</label>
+        <select id="l1Select" onchange="onL1SelectChange()">
+          <option value="">Add L1 first</option>
+        </select>
+        <div class="small">L1 must be two English letters, such as HM, LG, WR. OT is the temporary zone exception.</div>
+      </div>
+
+      <div class="row">
+        <label>Add new field</label>
+        <div class="inline-tools">
+          <input id="newL1" placeholder="e.g. HM" maxlength="2" style="flex:1;">
+          <button type="button" onclick="addL1Option()">Add L1</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="otHint" class="small"></div>
+    <div id="otHint" class="small"></div>
 
-  <div class="grid2">
-    <div class="row">
-      <label>Category</label>
-      <input id="l2" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
+    <div class="grid2">
+      <div class="row">
+        <label>Category</label>
+        <input id="l2" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
+      </div>
+
+      <div class="row">
+        <label>Topic</label>
+        <input id="l3" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
+      </div>
     </div>
 
     <div class="row">
-      <label>Topic</label>
-      <input id="l3" placeholder="Two digits, e.g. 01" maxlength="2" oninput="updateID()">
+      <label>ID<span class="req">*</span></label>
+      <input id="id" placeholder="e.g. HM-01-01-0001 or OT-01">
+      <div id="idHint" class="small">Standard format: L1-L2-L3-L4. OT is manual input, e.g. OT-01.</div>
     </div>
-  </div>
 
-  <div class="row">
-    <label>ID<span class="req">*</span></label>
-    <input id="id" placeholder="e.g. HM-01-01-0001 or OT-01">
-    <div id="idHint" class="small">Standard format: L1-L2-L3-L4. OT is manual input, e.g. OT-01.</div>
-  </div>
+    <div class="grid2">
+      <div class="row">
+        <label>Ownership<span class="req">*</span></label>
+        <select id="ownership">
+          <option value="">Select</option>
+          <option value="mine">mine</option>
+          <option value="other">other</option>
+          <option value="collaborative">collaborative</option>
+          <option value="unknown">unknown</option>
+        </select>
+      </div>
 
-  <div class="grid2">
+      <div class="row">
+        <label>Relation<span class="req">*</span></label>
+        <select id="relation">
+          <option value="">Select</option>
+          <option value="commissioned">commissioned</option>
+          <option value="general">general</option>
+          <option value="personal">personal</option>
+          <option value="work">work</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>Type<span class="req">*</span></label>
+        <select id="type">
+          <option value="">Select</option>
+          <option value="work">work</option>
+          <option value="tutorial">tutorial</option>
+          <option value="reference">reference</option>
+          <option value="note">note</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>CEFR</label>
+        <select id="cefr">
+          <option value="">Blank</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>Difficulty</label>
+        <select id="difficulty">
+          <option value="">Blank</option>
+          <option value="beginner">beginner</option>
+          <option value="intermediate">intermediate</option>
+          <option value="advanced">advanced</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Status</label>
+        <select id="status">
+          <option value="">Blank</option>
+          <option value="planned">planned</option>
+          <option value="in_progress">in_progress</option>
+          <option value="completed">completed</option>
+          <option value="abandoned">abandoned</option>
+        </select>
+      </div>
+    </div>
+
     <div class="row">
-      <label>Ownership<span class="req">*</span></label>
-      <select id="ownership">
-        <option value="">Select</option>
-        <option value="mine">mine</option>
-        <option value="other">other</option>
-        <option value="collaborative">collaborative</option>
-        <option value="unknown">unknown</option>
-      </select>
+      <label>Links</label>
+      <input id="link" placeholder="Cloud folder link / URL">
     </div>
 
     <div class="row">
-      <label>Relation<span class="req">*</span></label>
-      <select id="relation">
-        <option value="">Select</option>
-        <option value="commissioned">commissioned</option>
-        <option value="general">general</option>
-        <option value="personal">personal</option>
-        <option value="work">work</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div class="row">
-      <label>Type<span class="req">*</span></label>
-      <select id="type">
-        <option value="">Select</option>
-        <option value="work">work</option>
-        <option value="tutorial">tutorial</option>
-        <option value="reference">reference</option>
-        <option value="note">note</option>
-      </select>
+      <label>APA style</label>
+      <textarea id="apa" placeholder="APA style"></textarea>
     </div>
 
     <div class="row">
-      <label>CEFR</label>
-      <select id="cefr">
-        <option value="">Blank</option>
-        <option value="A1">A1</option>
-        <option value="A2">A2</option>
-        <option value="B1">B1</option>
-        <option value="B2">B2</option>
-        <option value="C1">C1</option>
-        <option value="C2">C2</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div class="row">
-      <label>Difficulty</label>
-      <select id="difficulty">
-        <option value="">Blank</option>
-        <option value="beginner">beginner</option>
-        <option value="intermediate">intermediate</option>
-        <option value="advanced">advanced</option>
-      </select>
+      <label>Info</label>
+      <textarea id="info" placeholder="Info"></textarea>
     </div>
 
     <div class="row">
-      <label>Status</label>
-      <select id="status">
-        <option value="">Blank</option>
-        <option value="planned">planned</option>
-        <option value="in_progress">in_progress</option>
-        <option value="completed">completed</option>
-        <option value="abandoned">abandoned</option>
-      </select>
+      <label>Notes</label>
+      <textarea id="notes" placeholder="Notes"></textarea>
     </div>
+
+    <div class="row">
+      <label>Tags</label>
+      <input id="tags" placeholder="#tag1 #tag2">
+    </div>
+
+    <button type="button" onclick="add()">Save</button>
   </div>
 
-  <div class="row">
-    <label>Links</label>
-    <input id="link" placeholder="Cloud folder link / URL">
+  <div class="box">
+    <div><b>Search</b></div>
+    <input id="search" placeholder="Search title / id / tags / info / notes / apa" oninput="renderList()" style="margin-top:8px;">
   </div>
 
-  <div class="row">
-    <label>APA style</label>
-    <textarea id="apa" placeholder="APA style"></textarea>
+  <div class="box">
+    <div><b>Index</b></div>
+    <div id="list" class="small">No database loaded.</div>
   </div>
-
-  <div class="row">
-    <label>Info</label>
-    <textarea id="info" placeholder="Info"></textarea>
-  </div>
-
-  <div class="row">
-    <label>Notes</label>
-    <textarea id="notes" placeholder="Notes"></textarea>
-  </div>
-
-  <div class="row">
-    <label>Tags</label>
-    <input id="tags" placeholder="#tag1 #tag2">
-  </div>
-
-  <button type="button" onclick="add()">Save</button>
 </div>
 
-<div class="box">
-  <div><b>Search</b></div>
-  <input id="search" placeholder="Search title / id / tags / info / notes / apa" oninput="renderList()" style="margin-top:8px;">
-</div>
+<div id="detailView" class="hidden">
+  <div class="box">
+    <div class="detail-header">
+      <div class="detail-title">Entry Detail</div>
+      <div>
+        <button type="button" onclick="backToIndex()">Back to index</button>
+      </div>
+    </div>
 
-<div class="box">
-  <div><b>Index</b></div>
-  <div id="list" class="small">No database loaded.</div>
-</div>
+    <div id="detailMeta" class="meta-box small">No entry selected.</div>
 
-<div class="box">
-  <div><b>Edit Entry</b></div>
-  <div id="editorArea" class="small">Select a title to view and edit.</div>
+    <div>
+      <div class="section-title">Edit Entry</div>
+      <div id="editorArea" class="small">Select a title to view and edit.</div>
+    </div>
+  </div>
 </div>
 
 </div>
@@ -380,6 +429,7 @@ function createDB(){
   renderList();
   clearEditor();
   updateID();
+  backToIndex();
   setState("new database created");
 }
 
@@ -401,6 +451,7 @@ document.getElementById("file").onchange = function(){
       renderList();
       clearEditor();
       updateID();
+      backToIndex();
       setState("database loaded: " + f.name);
     }catch(err){
       console.error(err);
@@ -410,6 +461,18 @@ document.getElementById("file").onchange = function(){
   };
   r.readAsArrayBuffer(f);
 };
+
+function showDetailView(){
+  document.getElementById("indexView").classList.add("hidden");
+  document.getElementById("detailView").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function backToIndex(){
+  document.getElementById("detailView").classList.add("hidden");
+  document.getElementById("indexView").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function toggleForm(){
   document.getElementById("formBox").classList.toggle("hidden");
@@ -823,11 +886,36 @@ function renderList(){
   });
 }
 
+function renderDetailMeta(item){
+  const detailMeta = document.getElementById("detailMeta");
+  const linkHtml = item.link
+    ? `<div style="margin-top:8px;"><b>Link:</b> <a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.link)}</a></div>`
+    : `<div style="margin-top:8px;"><b>Link:</b> <span class="small">blank</span></div>`;
+
+  detailMeta.innerHTML = `
+    <div style="margin-bottom:8px;"><b>${escapeHtml(item.title || "")}</b></div>
+    <div class="badge-line">
+      <span class="badge">ID: ${escapeHtml(item.id || "")}</span>
+      <span class="badge">ownership: ${escapeHtml(item.ownership || "blank")}</span>
+      <span class="badge">relation: ${escapeHtml(item.relation || "blank")}</span>
+      <span class="badge">type: ${escapeHtml(item.type || "blank")}</span>
+      <span class="badge">CEFR: ${escapeHtml(item.cefr || "blank")}</span>
+      <span class="badge">difficulty: ${escapeHtml(item.difficulty || "blank")}</span>
+      <span class="badge">status: ${escapeHtml(item.status || "blank")}</span>
+    </div>
+    <div style="margin-top:8px;"><b>Created:</b> ${escapeHtml(item.created_at || "")}</div>
+    <div style="margin-top:8px;"><b>Tags:</b> ${escapeHtml(item.tags || "") || '<span class="small">blank</span>'}</div>
+    ${linkHtml}
+  `;
+}
+
 function openEditor(id){
   const item = getAllItems().find(x => x.id === id);
   if(!item) return;
 
   currentEditId = id;
+  renderDetailMeta(item);
+
   document.getElementById("editorArea").innerHTML = `
     <div class="row">
       <label>Title<span class="req">*</span></label>
@@ -945,7 +1033,7 @@ function openEditor(id){
     </div>
 
     <button type="button" onclick="saveEditor()">Save changes</button>
-    <button type="button" onclick="clearEditor()">Close</button>
+    <button type="button" onclick="backToIndex()">Back to index</button>
     <div id="edit_msg" class="small"></div>
   `;
 
@@ -955,6 +1043,8 @@ function openEditor(id){
   document.getElementById("edit_cefr").value = item.cefr || "";
   document.getElementById("edit_difficulty").value = item.difficulty || "";
   document.getElementById("edit_status").value = item.status || "";
+
+  showDetailView();
 }
 
 function saveEditor(){
@@ -1017,6 +1107,11 @@ function saveEditor(){
       ]
     );
 
+    const updatedItem = getAllItems().find(x => x.id === payload.id);
+    if(updatedItem){
+      renderDetailMeta(updatedItem);
+    }
+
     document.getElementById("edit_msg").textContent = "Saved.";
     renderList();
   }catch(err){
@@ -1027,6 +1122,7 @@ function saveEditor(){
 
 function clearEditor(){
   currentEditId = null;
+  document.getElementById("detailMeta").innerHTML = "No entry selected.";
   document.getElementById("editorArea").innerHTML = "Select a title to view and edit.";
 }
 
