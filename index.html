@@ -1219,13 +1219,13 @@ function renderTagChips(tagsText){
   }
 
   return tags.map(tag => {
-    return `<span class="tag-chip" onclick="searchByTag('${tag}')">${tag}</span>`;
+    return `<span class="tag-chip" onclick="searchByTag('${escapeAttr(tag)}')">${escapeHtml(tag)}</span>`;
   }).join(" ");
 }
 
 function searchByTag(tag){
   backToIndex();
-  document.getElementById("search").value = tag;
+  document.getElementById("search").value = "tag:" + tag;
   renderList();
 }
   function parseLines(text){
@@ -1239,9 +1239,9 @@ function renderLinks(text){
   const lines = parseLines(text);
 
   if(!lines.length){
-    return `<span class="small">blank</span>`;
-  }
-
+  return `<span class="small">(none)</span>`;
+}
+  
   return lines.map(l=>{
     const url = escapeAttr(l);
     return `<div><a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(l)}</a></div>`;
