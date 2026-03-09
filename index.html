@@ -834,6 +834,268 @@ function openEditor(id){
     return;
   }
 
+  // 先立即開新分頁，避免被視為非使用者觸發
+  const win = window.open("about:blank", "_blank");
+
+  if(!win){
+    alert("New tab was blocked by the browser. Please allow pop-ups, or try opening this page in a normal browser.");
+    return;
+  }
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Entry - ${escapeHtml(item.title)}</title>
+<style>
+body{
+  font-family: monospace;
+  background:#f5f5f5;
+  margin:0;
+  padding:16px;
+  color:#111;
+}
+.wrap{
+  max-width:900px;
+  margin:0 auto;
+}
+.box{
+  background:#fff;
+  border:1px solid #222;
+  padding:12px;
+  margin-bottom:14px;
+}
+.row{
+  margin-bottom:10px;
+}
+label{
+  display:block;
+  font-weight:bold;
+  margin-bottom:4px;
+}
+.req{
+  margin-left:4px;
+}
+input, textarea, select{
+  width:100%;
+  box-sizing:border-box;
+  font-family:monospace;
+  border:1px solid #999;
+  padding:8px;
+  background:#fff;
+}
+textarea{
+  min-height:100px;
+  resize:vertical;
+}
+button{
+  font-family:monospace;
+  border:1px solid #222;
+  background:#fff;
+  padding:8px 10px;
+  cursor:pointer;
+  margin:4px 6px 4px 0;
+}
+button:hover{
+  background:#f0f0f0;
+}
+.small{
+  font-size:12px;
+  color:#666;
+  margin-top:6px;
+  line-height:1.5;
+}
+.grid2{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+@media (min-width: 780px){
+  .grid2{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="box">
+    <b>Edit Entry</b>
+    <div class="small">ID is fixed in this editor.</div>
+  </div>
+
+  <div class="box">
+    <div class="row">
+      <label>Title<span class="req">*</span></label>
+      <input id="title" value="${escapeAttr(item.title)}">
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>ID<span class="req">*</span></label>
+        <input id="id" value="${escapeAttr(item.id)}" readonly>
+      </div>
+
+      <div class="row">
+        <label>Creation time</label>
+        <input id="created_at" value="${escapeAttr(item.created_at)}" readonly>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>Ownership<span class="req">*</span></label>
+        <select id="ownership">
+          <option value="">Select</option>
+          <option value="mine">mine</option>
+          <option value="other">other</option>
+          <option value="collaborative">collaborative</option>
+          <option value="unknown">unknown</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Relation<span class="req">*</span></label>
+        <select id="relation">
+          <option value="">Select</option>
+          <option value="commissioned">commissioned</option>
+          <option value="general">general</option>
+          <option value="personal">personal</option>
+          <option value="work">work</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>Type<span class="req">*</span></label>
+        <select id="type">
+          <option value="">Select</option>
+          <option value="work">work</option>
+          <option value="tutorial">tutorial</option>
+          <option value="reference">reference</option>
+          <option value="note">note</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>CEFR</label>
+        <select id="cefr">
+          <option value="">Blank</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row">
+        <label>Difficulty</label>
+        <select id="difficulty">
+          <option value="">Blank</option>
+          <option value="beginner">beginner</option>
+          <option value="intermediate">intermediate</option>
+          <option value="advanced">advanced</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Status</label>
+        <select id="status">
+          <option value="">Blank</option>
+          <option value="planned">planned</option>
+          <option value="in_progress">in_progress</option>
+          <option value="completed">completed</option>
+          <option value="abandoned">abandoned</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Links</label>
+      <input id="link" value="${escapeAttr(item.link)}">
+    </div>
+
+    <div class="row">
+      <label>APA style</label>
+      <textarea id="apa">${escapeHtml(item.apa)}</textarea>
+    </div>
+
+    <div class="row">
+      <label>Info</label>
+      <textarea id="info">${escapeHtml(item.info)}</textarea>
+    </div>
+
+    <div class="row">
+      <label>Notes</label>
+      <textarea id="notes">${escapeHtml(item.notes)}</textarea>
+    </div>
+
+    <div class="row">
+      <label>Tags</label>
+      <input id="tags" value="${escapeAttr(item.tags)}">
+    </div>
+
+    <button onclick="saveEntry()">Save</button>
+    <button onclick="window.close()">Close</button>
+    <div id="msg" class="small"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById("ownership").value = ${JSON.stringify(item.ownership)};
+document.getElementById("relation").value = ${JSON.stringify(item.relation)};
+document.getElementById("type").value = ${JSON.stringify(item.type)};
+document.getElementById("cefr").value = ${JSON.stringify(item.cefr)};
+document.getElementById("difficulty").value = ${JSON.stringify(item.difficulty)};
+document.getElementById("status").value = ${JSON.stringify(item.status)};
+
+function saveEntry(){
+  const payload = {
+    id: document.getElementById("id").value.trim(),
+    title: document.getElementById("title").value.trim(),
+    ownership: document.getElementById("ownership").value,
+    relation: document.getElementById("relation").value,
+    type: document.getElementById("type").value,
+    created_at: document.getElementById("created_at").value.trim(),
+    cefr: document.getElementById("cefr").value,
+    difficulty: document.getElementById("difficulty").value,
+    status: document.getElementById("status").value,
+    link: document.getElementById("link").value.trim(),
+    apa: document.getElementById("apa").value.trim(),
+    info: document.getElementById("info").value.trim(),
+    notes: document.getElementById("notes").value.trim(),
+    tags: document.getElementById("tags").value.trim()
+  };
+
+  if(!payload.title || !payload.id || !payload.ownership || !payload.relation || !payload.type){
+    document.getElementById("msg").textContent = "Required fields: Title / ID / Ownership / Relation / Type";
+    return;
+  }
+
+  if(window.opener && !window.opener.closed && typeof window.opener.updateEntryFromEditor === "function"){
+    const ok = window.opener.updateEntryFromEditor(payload);
+    document.getElementById("msg").textContent = ok ? "Saved." : "Save failed.";
+  }else{
+    document.getElementById("msg").textContent = "Parent window not available.";
+  }
+}
+<\/script>
+</body>
+</html>
+  `;
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
   const win = window.open("", "_blank");
   if(!win){
     alert("Popup blocked. Please allow popups for this site.");
