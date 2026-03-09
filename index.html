@@ -857,4 +857,91 @@ function renderList(){
 
 function showDetailById(id){
   const items = getAllItems();
-  const item = items.find(x => x.
+  const item = items.find(x => x.id === id);
+  if(!item) return;
+
+  document.getElementById("detail").innerHTML = `
+    <div class="detail-title">${escapeHtml(item.title)}</div>
+
+    <div class="section-title">Status</div>
+    <div class="detail-block">
+      <div class="detail-line"><span class="inline-label">ID:</span> ${escapeHtml(item.id)}</div>
+      <div class="detail-line"><span class="inline-label">Ownership:</span> ${escapeHtml(item.ownership)}</div>
+      <div class="detail-line"><span class="inline-label">Relation:</span> ${escapeHtml(item.relation)}</div>
+      <div class="detail-line"><span class="inline-label">Type:</span> ${escapeHtml(item.type)}</div>
+      <div class="detail-line"><span class="inline-label">Creation time:</span> ${escapeHtml(item.created_at)}</div>
+      <div class="detail-line"><span class="inline-label">CEFR:</span> ${escapeHtml(item.cefr)}</div>
+      <div class="detail-line"><span class="inline-label">Difficulty:</span> ${escapeHtml(item.difficulty)}</div>
+      <div class="detail-line"><span class="inline-label">Status:</span> ${escapeHtml(item.status)}</div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="section-title">References</div>
+    <div class="detail-block">
+      <div class="detail-line"><span class="inline-label">Links:</span> ${
+        item.link
+          ? `<a href="${escapeAttr(item.link)}" target="_blank" rel="noopener noreferrer">open</a>`
+          : ""
+      }</div>
+      <div class="detail-line"><span class="inline-label">APA style:</span><br>${nl2br(escapeHtml(item.apa))}</div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="section-title">Info</div>
+    <div class="detail-block">${nl2br(escapeHtml(item.info))}</div>
+
+    <div class="hr"></div>
+
+    <div class="section-title">Notes</div>
+    <div class="detail-block">${nl2br(escapeHtml(item.notes))}</div>
+
+    <div class="hr"></div>
+
+    <div class="section-title">Tags</div>
+    <div class="detail-block">${escapeHtml(item.tags)}</div>
+  `;
+}
+
+function clearDetail(){
+  document.getElementById("detail").innerHTML = "Select a title.";
+}
+
+function exportDB(){
+  if(!db){
+    alert("No database to download.");
+    return;
+  }
+
+  const data = db.export();
+  const blob = new Blob([data], {type:"application/octet-stream"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "catalog.db";
+  a.click();
+}
+
+function nl2br(str){
+  return String(str).replace(/\n/g, "<br>");
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/"/g,"&quot;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
