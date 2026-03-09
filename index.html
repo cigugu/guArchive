@@ -2,228 +2,323 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>Reference Catalog Test</title>
-
+<title>Personal Reference Catalog</title>
 <script src="sql-wasm.js"></script>
 
 <style>
-
 body{
-font-family:monospace;
-background:#f5f5f5;
-padding:30px;
+  font-family: monospace;
+  background:#f5f5f5;
+  margin:0;
+  padding:20px;
+  color:#111;
 }
 
 h1{
-margin-bottom:10px;
+  font-size:24px;
+  margin:0 0 20px 0;
 }
 
-.box{
-background:white;
-padding:15px;
-border:2px solid black;
-margin-bottom:20px;
-}
-
-input,textarea{
-width:100%;
-margin:5px 0;
-font-family:monospace;
+.toolbar,
+.searchbox,
+.listbox,
+.detailbox,
+.formbox{
+  background:#fff;
+  border:1px solid #222;
+  padding:12px;
+  margin-bottom:14px;
 }
 
 button{
-padding:8px;
-margin-top:5px;
-cursor:pointer;
+  font-family:monospace;
+  padding:6px 10px;
+  cursor:pointer;
+  background:#fff;
+  border:1px solid #222;
 }
 
-table{
-border-collapse:collapse;
-width:100%;
-margin-top:10px;
+input, textarea{
+  width:100%;
+  box-sizing:border-box;
+  font-family:monospace;
+  margin-top:8px;
+  padding:6px;
+  border:1px solid #999;
+  background:#fff;
 }
 
-td,th{
-border:1px solid black;
-padding:5px;
+textarea{
+  min-height:100px;
+  resize:vertical;
 }
 
+.small{
+  font-size:12px;
+  color:#666;
+  margin-top:8px;
+}
+
+.item{
+  padding:10px 8px;
+  border-bottom:1px solid #ddd;
+  cursor:pointer;
+}
+
+.item:hover{
+  background:#f0f0f0;
+}
+
+.item-title{
+  font-weight:bold;
+}
+
+.item-meta{
+  font-size:12px;
+  color:#666;
+  margin-top:4px;
+}
+
+.hidden{
+  display:none;
+}
+
+.detail-row{
+  margin-bottom:10px;
+}
+
+.detail-label{
+  font-weight:bold;
+  display:block;
+  margin-bottom:3px;
+}
+
+a{
+  color:#111;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Personal Reference Catalog (test)</h1>
+<h1>Personal Reference Catalog</h1>
 
-<div class="box">
-
-<b>Database</b><br>
-
-<button onclick="createDB()">Create new DB</button>
-
-<input type="file" id="file">
-
-<button onclick="exportDB()">Download DB</button>
-
-<div id="state">engine loading...</div>
-
+<div class="toolbar">
+  <button onclick="createDB()">Create DB</button>
+  <input type="file" id="file">
+  <button onclick="exportDB()">Download DB</button>
+  <button onclick="toggleForm()">Add Entry</button>
+  <div id="state" class="small">engine loading...</div>
 </div>
 
-<div class="box">
-
-<b>Add entry</b>
-
-<input id="id" placeholder="ID (ex: WR-01-02-0042)">
-<input id="title" placeholder="title">
-<input id="link" placeholder="link">
-<input id="tag" placeholder="tag (optional)">
-<textarea id="notes" placeholder="notes"></textarea>
-
-<button onclick="add()">Add</button>
-
+<div id="formBox" class="formbox hidden">
+  <div><b>New Entry</b></div>
+  <input id="id" placeholder="ID">
+  <input id="title" placeholder="Title">
+  <input id="link" placeholder="Link">
+  <input id="tag" placeholder="Tag">
+  <textarea id="notes" placeholder="Notes"></textarea>
+  <button onclick="add()">Save</button>
 </div>
 
-<div class="box">
+<div class="searchbox">
+  <input id="search" placeholder="Search title / id / tag" oninput="renderList()">
+</div>
 
-<b>Search</b>
+<div class="listbox">
+  <div><b>Index</b></div>
+  <div id="list"></div>
+</div>
 
-<input id="search" placeholder="keyword search" oninput="render()">
-
-<div id="table"></div>
-
+<div class="detailbox">
+  <div><b>Detail</b></div>
+  <div id="detail" class="small">Select an entry.</div>
 </div>
 
 <script>
-
-let SQL
-let db
+let SQL;
+let db;
 
 initSqlJs({
-locateFile:file=>file
+  locateFile:file=>file
 }).then(function(sql){
-
-SQL = sql
-
-document.getElementById("state").innerText="engine ready"
-
-})
+  SQL = sql;
+  document.getElementById("state").innerText = "engine ready";
+});
 
 function createDB(){
-
-db = new SQL.Database()
-
-db.run(`
-CREATE TABLE items(
-id TEXT PRIMARY KEY,
-title TEXT,
-link TEXT,
-tag TEXT,
-notes TEXT
-)
-`)
-
-render()
-
+  db = new SQL.Database();
+  db.run(`
+    CREATE TABLE items(
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      link TEXT,
+      tag TEXT,
+      notes TEXT
+    )
+  `);
+  renderList();
+  clearDetail();
 }
 
-document.getElementById("file").onchange=function(){
+document.getElementById("file").onchange = function(){
+  let f = this.files[0];
+  if(!f) return;
 
-let f=this.files[0]
+  let r = new FileReader();
+  r.onload = function(){
+    let data = new Uint8Array(r.result);
+    db = new SQL.Database(data);
+    renderList();
+    clearDetail();
+  };
+  r.readAsArrayBuffer(f);
+};
 
-let r=new FileReader()
-
-r.onload=function(){
-
-let data=new Uint8Array(r.result)
-
-db=new SQL.Database(data)
-
-render()
-
-}
-
-r.readAsArrayBuffer(f)
-
+function toggleForm(){
+  document.getElementById("formBox").classList.toggle("hidden");
 }
 
 function add(){
+  if(!db){
+    alert("create db first");
+    return;
+  }
 
-if(!db){
-alert("create db first")
-return
+  let id = document.getElementById("id").value.trim();
+  let title = document.getElementById("title").value.trim();
+  let link = document.getElementById("link").value.trim();
+  let tag = document.getElementById("tag").value.trim();
+  let notes = document.getElementById("notes").value.trim();
+
+  if(!id || !title){
+    alert("ID and Title are required");
+    return;
+  }
+
+  db.run(
+    "INSERT INTO items VALUES (?,?,?,?,?)",
+    [id, title, link, tag, notes]
+  );
+
+  document.getElementById("id").value = "";
+  document.getElementById("title").value = "";
+  document.getElementById("link").value = "";
+  document.getElementById("tag").value = "";
+  document.getElementById("notes").value = "";
+
+  renderList();
 }
 
-let id=document.getElementById("id").value
-let title=document.getElementById("title").value
-let link=document.getElementById("link").value
-let tag=document.getElementById("tag").value
-let notes=document.getElementById("notes").value
+function getAllItems(){
+  if(!db) return [];
 
-db.run(
-"INSERT INTO items VALUES (?,?,?,?,?)",
-[id,title,link,tag,notes]
-)
+  let res = db.exec("SELECT * FROM items ORDER BY id ASC");
+  if(!res.length) return [];
 
-render()
-
+  return res[0].values.map(row => ({
+    id: row[0],
+    title: row[1],
+    link: row[2],
+    tag: row[3],
+    notes: row[4]
+  }));
 }
 
-function render(){
+function renderList(){
+  if(!db){
+    document.getElementById("list").innerHTML = '<div class="small">No database loaded.</div>';
+    return;
+  }
 
-if(!db)return
+  let q = document.getElementById("search").value.toLowerCase().trim();
+  let items = getAllItems();
 
-let q=document.getElementById("search").value.toLowerCase()
+  if(q){
+    items = items.filter(item => {
+      let text = [item.id, item.title, item.tag, item.notes, item.link].join(" ").toLowerCase();
+      return text.includes(q);
+    });
+  }
 
-let res=db.exec("SELECT * FROM items")
+  if(!items.length){
+    document.getElementById("list").innerHTML = '<div class="small">No result.</div>';
+    return;
+  }
 
-let html="<table>"
-html+="<tr><th>ID</th><th>Title</th><th>Tag</th><th>Link</th></tr>"
+  let html = "";
+  items.forEach(item => {
+    html += `
+      <div class="item" onclick="showDetail('${escapeHtml(item.id)}')">
+        <div class="item-title">${escapeHtml(item.title || "(untitled)")}</div>
+        <div class="item-meta">${escapeHtml(item.id)}${item.tag ? " / " + escapeHtml(item.tag) : ""}</div>
+      </div>
+    `;
+  });
 
-if(res.length){
-
-res[0].values.forEach(row=>{
-
-let text=(row.join(" ")).toLowerCase()
-
-if(!text.includes(q))return
-
-html+=`
-<tr>
-<td>${row[0]}</td>
-<td>${row[1]}</td>
-<td>${row[3]}</td>
-<td><a href="${row[2]}" target="_blank">open</a></td>
-</tr>
-`
-
-})
-
+  document.getElementById("list").innerHTML = html;
 }
 
-html+="</table>"
+function showDetail(id){
+  let items = getAllItems();
+  let item = items.find(x => x.id === id);
+  if(!item) return;
 
-document.getElementById("table").innerHTML=html
+  document.getElementById("detail").innerHTML = `
+    <div class="detail-row">
+      <span class="detail-label">Title</span>
+      <div>${escapeHtml(item.title || "")}</div>
+    </div>
 
+    <div class="detail-row">
+      <span class="detail-label">ID</span>
+      <div>${escapeHtml(item.id || "")}</div>
+    </div>
+
+    <div class="detail-row">
+      <span class="detail-label">Tag</span>
+      <div>${escapeHtml(item.tag || "")}</div>
+    </div>
+
+    <div class="detail-row">
+      <span class="detail-label">Link</span>
+      <div>${item.link ? `<a href="${escapeAttr(item.link)}" target="_blank">open</a>` : ""}</div>
+    </div>
+
+    <div class="detail-row">
+      <span class="detail-label">Notes</span>
+      <div>${escapeHtml(item.notes || "").replace(/\n/g,"<br>")}</div>
+    </div>
+  `;
+}
+
+function clearDetail(){
+  document.getElementById("detail").innerHTML = 'Select an entry.';
 }
 
 function exportDB(){
+  if(!db) return;
 
-if(!db)return
-
-let data=db.export()
-
-let blob=new Blob([data])
-
-let a=document.createElement("a")
-
-a.href=URL.createObjectURL(blob)
-
-a.download="catalog.db"
-
-a.click()
-
+  let data = db.export();
+  let blob = new Blob([data], {type:"application/octet-stream"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "catalog.db";
+  a.click();
 }
 
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(str){
+  return String(str).replace(/"/g, "&quot;");
+}
 </script>
 
 </body>
