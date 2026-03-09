@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地獄級文獻管理系統 - V2</title>
-    <script src="https://sql.js.org/dist/sql-wasm.js"></script>
+    <title>地獄級文獻管理系統 - 穩定版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
     <style>
         body { font-family: monospace; background: #e0e0e0; padding: 20px; color: #333; }
         .container { display: flex; gap: 20px; flex-wrap: wrap; }
@@ -14,6 +14,7 @@
         label { font-weight: bold; font-size: 12px; display: block; margin-top: 5px; }
         button { cursor: pointer; margin-top: 10px; width: 100%; padding: 10px; background: #ddd; border: 2px solid #000; font-weight: bold; }
         button:hover { background: #bbb; }
+        button:disabled { background: #eee; color: #999; cursor: not-allowed; }
         table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 6px; text-align: left; }
         th { background: #eee; }
@@ -22,14 +23,13 @@
 </head>
 <body>
 
-<div class="status-bar">STATUS: <span id="db-state">🔴 引擎準備中...</span></div>
+<div class="status-bar">STATUS: <span id="db-state">🔴 正在連接雲端引擎...</span></div>
 
 <div class="container">
     <div class="editor">
         <label>1. 初始化 / 載入</label>
-        <button onclick="createNewDB()" style="background: #eef1ff;">✨ 點我建立全新資料庫檔案</button>
+        <button id="btn-create" onclick="createNewDB()" disabled>✨ 點我建立全新資料庫檔案</button>
         <input type="file" id="dbfile" accept=".db">
-        
         <hr>
         <label>2. 輸入資料</label>
         <input type="text" id="title" placeholder="在此輸入標題">
@@ -47,56 +47,46 @@
                 <select id="status"><option>planned</option><option>in_progress</option><option>completed</option></select>
             </div>
         </div>
-
         <label>Links</label>
         <input type="text" id="links">
         <label>Notes</label>
         <textarea id="notes" rows="4"></textarea>
 
-        <button onclick="addEntry()" style="background: #ccffcc;">🔥 存入記憶體資料庫</button>
-        <button onclick="exportDB()" style="background: #ffcccc;">💾 下載更新後的 .db</button>
+        <button id="btn-add" onclick="addEntry()" style="background: #ccffcc;" disabled>🔥 存入記憶體資料庫</button>
+        <button id="btn-export" onclick="exportDB()" style="background: #ffcccc;" disabled>💾 下載更新後的 .db</button>
     </div>
 
     <div class="viewer">
         <input type="text" id="search" placeholder="搜尋標題..." oninput="renderTable()">
-        <div id="table-container">載入後在此顯示...</div>
+        <div id="table-container">引擎就緒後，載入資料庫即可顯示內容</div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
-
 <script>
     let db;
-    // 這是關鍵：手動指定 WASM 檔案的位置
+    // 強制指定 WASM 檔案的路徑
     const SQL_CONFIG = { 
         locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}` 
     };
 
-    // 增加一個檢查機制
-    function checkEngine() {
-        if (typeof initSqljs === 'undefined') {
-            alert("❌ 引擎尚未就緒，請檢查網路連線或重新整理網頁。");
-            return false;
-        }
-        return true;
-    }
-
-    // 初始化引擎
-    window.onload = () => {
-        if (typeof initSqljs !== 'undefined') {
-            initSqljs(SQL_CONFIG).then(SQL => {
+    // 啟動引擎
+    window.onload = function() {
+        if (typeof initSqljs === 'function') {
+            initSqljs(SQL_CONFIG).then(function(SQL) {
                 window.SQL = SQL;
-                document.getElementById('db-state').innerText = "🟢 引擎已就緒，請載入或建立資料庫";
-            }).catch(err => {
-                document.getElementById('db-state').innerText = "❌ 引擎啟動失敗: " + err;
+                document.getElementById('db-state').innerText = "🟢 引擎已就緒，請建立或載入資料庫";
+                document.getElementById('btn-create').disabled = false;
+                document.getElementById('btn-add').disabled = false;
+                document.getElementById('btn-export').disabled = false;
+            }).catch(e => {
+                document.getElementById('db-state').innerText = "❌ 引擎啟動失敗: " + e;
             });
         } else {
-            document.getElementById('db-state').innerText = "❌ 無法從雲端載入引擎，請重新整理";
+            document.getElementById('db-state').innerText = "❌ 無法下載引擎，請確認網路或重新整理";
         }
     };
 
     function createNewDB() {
-        if (!checkEngine()) return;
         db = new window.SQL.Database();
         db.run(`CREATE TABLE literature (id INTEGER PRIMARY KEY, title TEXT, ownership TEXT, relation TEXT, cefr TEXT, status TEXT, links TEXT, notes TEXT)`);
         document.getElementById('db-state').innerText = "✅ 已建立全新資料庫";
@@ -104,7 +94,6 @@
     }
 
     document.getElementById('dbfile').onchange = function() {
-        if (!checkEngine()) return;
         const f = this.files[0];
         const r = new FileReader();
         r.onload = function() {
@@ -129,7 +118,7 @@
         ];
         db.run("INSERT INTO literature (title, ownership, relation, cefr, status, links, notes) VALUES (?,?,?,?,?,?,?)", vals);
         renderTable();
-        alert("已存入記憶體！");
+        alert("已成功存入記憶體！");
     }
 
     function renderTable() {
@@ -144,8 +133,8 @@
             }
             html += "</table>";
             document.getElementById('table-container').innerHTML = html;
-        } catch (e) {
-            console.log("表格渲染失敗，可能資料表尚未建立");
+        } catch(e) {
+            console.log("資料表可能尚未建立");
         }
     }
 
@@ -161,4 +150,3 @@
 </script>
 </body>
 </html>
-
