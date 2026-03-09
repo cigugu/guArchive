@@ -63,6 +63,7 @@ button:hover{
   font-size:12px;
   color:#666;
   margin-top:6px;
+  line-height:1.5;
 }
 .hidden{
   display:none;
@@ -125,11 +126,6 @@ button:hover{
   flex-wrap:wrap;
   align-items:center;
 }
-.codebox{
-  background:#fafafa;
-  border:1px solid #ddd;
-  padding:8px;
-}
 @media (min-width: 780px){
   .grid2{
     grid-template-columns:1fr 1fr;
@@ -163,36 +159,40 @@ button:hover{
 
   <div class="grid2">
     <div class="row">
-      <label>L1 Field</label>
-      <select id="l1Select" onchange="onL1SelectChange()"></select>
-      <div class="small">可從選單選，也可新增新的 L1</div>
+      <label>L1 領域</label>
+      <select id="l1Select" onchange="onL1SelectChange()">
+        <option value="">請先新增 L1</option>
+      </select>
+      <div class="small">L1 必須是兩位英文字母，例如 HM、LG、WR。OT 為暫存區例外。</div>
     </div>
 
     <div class="row">
       <label>Add new L1</label>
       <div class="inline-tools">
-        <input id="newL1" placeholder="例如：W" maxlength="3" style="flex:1;">
+        <input id="newL1" placeholder="例如：HM" maxlength="2" style="flex:1;">
         <button type="button" onclick="addL1Option()">Add L1</button>
       </div>
     </div>
   </div>
 
+  <div id="otHint" class="small"></div>
+
   <div class="grid2">
     <div class="row">
-      <label>L2 Category</label>
-      <input id="l2" placeholder="2位數，例如：01" maxlength="2" oninput="updateID()">
+      <label>L2 分類</label>
+      <input id="l2" placeholder="兩位數，例如 01" maxlength="2" oninput="updateID()">
     </div>
 
     <div class="row">
-      <label>L3 Topic</label>
-      <input id="l3" placeholder="2位數，例如：02" maxlength="2" oninput="updateID()">
+      <label>L3 細項</label>
+      <input id="l3" placeholder="兩位數，例如 01" maxlength="2" oninput="updateID()">
     </div>
   </div>
 
   <div class="row">
     <label>ID !!</label>
-    <input id="id" placeholder="例如：W-01-02-0001">
-    <div class="small">依 L1 / L2 / L3 自動生成，可手動修改</div>
+    <input id="id" placeholder="例如：HM-01-01-0001 或 OT-01">
+    <div class="small">一般格式：L1-L2-L3-L4。暫存區例外：OT-兩位數。</div>
   </div>
 
   <div class="grid2">
@@ -316,9 +316,7 @@ button:hover{
 <script>
 let SQL;
 let db;
-
-const defaultL1Options = ["W", "L", "T"];
-let l1Options = [...defaultL1Options];
+let l1Options = [];
 
 initSqlJs({
   locateFile: file => file
@@ -376,9 +374,18 @@ function toggleForm(){
   updateID();
 }
 
+function normalizeL1(v){
+  return String(v || "").trim().toUpperCase();
+}
+
 function renderL1Options(selectedValue = ""){
   const sel = document.getElementById("l1Select");
   sel.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "請先新增 L1";
+  sel.appendChild(placeholder);
 
   l1Options.forEach(v => {
     const opt = document.createElement("option");
@@ -389,51 +396,46 @@ function renderL1Options(selectedValue = ""){
 
   if(selectedValue && l1Options.includes(selectedValue)){
     sel.value = selectedValue;
-  }else if(l1Options.length){
-    sel.value = l1Options[0];
+  }else{
+    sel.value = "";
   }
 
-  updateID();
-}
-
-function normalizeL1(v){
-  return String(v || "").trim().toUpperCase();
+  onL1SelectChange();
 }
 
 function addL1Option(){
   const input = document.getElementById("newL1");
   const value = normalizeL1(input.value);
 
-  if(!value){
-    alert("請輸入新的 L1");
+  if(!/^[A-Z]{2}$/.test(value)){
+    alert("L1 必須是兩位英文字母，例如 HM");
     return;
   }
 
-  if(l1Options.includes(value)){
-    document.getElementById("l1Select").value = value;
-    input.value = "";
-    updateID();
-    return;
+  if(!l1Options.includes(value)){
+    l1Options.push(value);
+    l1Options.sort();
   }
 
-  l1Options.push(value);
-  l1Options.sort();
-  renderL1Options(value);
   input.value = "";
+  renderL1Options(value);
 }
 
 function onL1SelectChange(){
+  const l1 = normalizeL1(document.getElementById("l1Select").value);
+  const hint = document.getElementById("otHint");
+
+  if(l1 === "OT"){
+    hint.textContent = "OT 為暫存區，ID 格式使用 OT-兩位數字。L2 / L3 不使用。";
+    document.getElementById("l2").disabled = true;
+    document.getElementById("l3").disabled = true;
+  }else{
+    hint.textContent = "";
+    document.getElementById("l2").disabled = false;
+    document.getElementById("l3").disabled = false;
+  }
+
   updateID();
-}
-
-function pad2(v){
-  const s = String(v || "").replace(/\D/g, "");
-  return s ? s.padStart(2, "0").slice(-2) : "";
-}
-
-function pad4(v){
-  const s = String(v || "").replace(/\D/g, "");
-  return s ? s.padStart(4, "0").slice(-4) : "";
 }
 
 function nowText(){
@@ -480,12 +482,8 @@ function getAllItems(){
 
 function rebuildL1OptionsFromDB(){
   const items = getAllItems();
-  const fromDB = items
-    .map(x => normalizeL1(x.id.split("-")[0] || ""))
-    .filter(Boolean);
-
-  const merged = new Set([...defaultL1Options, ...fromDB, ...l1Options]);
-  l1Options = Array.from(merged).sort();
+  const fromDB = items.map(x => normalizeL1(x.id.split("-")[0] || "")).filter(Boolean);
+  l1Options = Array.from(new Set([...l1Options, ...fromDB])).sort();
   renderL1Options();
 }
 
@@ -507,25 +505,49 @@ function nextSerialFor(l1, l2, l3){
   return String(maxNum + 1).padStart(4, "0");
 }
 
+function nextOTSerial(){
+  if(!db) return "01";
+
+  const items = getAllItems().filter(x => /^OT-\d{2}$/.test(x.id));
+  let maxNum = 0;
+
+  items.forEach(item => {
+    const parts = item.id.split("-");
+    if(parts.length === 2){
+      const n = parseInt(parts[1], 10);
+      if(!isNaN(n) && n > maxNum) maxNum = n;
+    }
+  });
+
+  return String(maxNum + 1).padStart(2, "0");
+}
+
 function updateID(){
   const l1 = normalizeL1(document.getElementById("l1Select").value);
-  const l2 = pad2(document.getElementById("l2").value);
-  const l3 = pad2(document.getElementById("l3").value);
+  const l2 = document.getElementById("l2").value.trim();
+  const l3 = document.getElementById("l3").value.trim();
 
-  if(document.getElementById("l2").value !== l2 && l2){
-    document.getElementById("l2").value = l2;
-  }
-  if(document.getElementById("l3").value !== l3 && l3){
-    document.getElementById("l3").value = l3;
+  if(!l1){
+    document.getElementById("id").value = "";
+    return;
   }
 
-  if(!l1 || !l2 || !l3){
+  if(l1 === "OT"){
+    document.getElementById("id").value = `OT-${nextOTSerial()}`;
+    return;
+  }
+
+  if(!/^\d{2}$/.test(l2) || !/^\d{2}$/.test(l3)){
     document.getElementById("id").value = "";
     return;
   }
 
   const serial = nextSerialFor(l1, l2, l3);
   document.getElementById("id").value = `${l1}-${l2}-${l3}-${serial}`;
+}
+
+function isValidID(id){
+  return /^[A-Z]{2}-\d{2}-\d{2}-\d{4}$/.test(id) || /^OT-\d{2}$/.test(id);
 }
 
 function add(){
@@ -536,10 +558,13 @@ function add(){
 
   const title = document.getElementById("title").value.trim();
   const id = document.getElementById("id").value.trim().toUpperCase();
+  const l1 = normalizeL1(document.getElementById("l1Select").value);
+  const l2 = document.getElementById("l2").value.trim();
+  const l3 = document.getElementById("l3").value.trim();
+
   const ownership = document.getElementById("ownership").value;
   const relation = document.getElementById("relation").value;
   const type = document.getElementById("type").value;
-
   const cefr = document.getElementById("cefr").value;
   const difficulty = document.getElementById("difficulty").value;
   const status = document.getElementById("status").value;
@@ -554,16 +579,41 @@ function add(){
     return;
   }
 
-  if(!/^[A-Z]+-\d{2}-\d{2}-\d{4}$/.test(id)){
-    alert("ID 格式必須是 L1-L2-L3-L4，例如：W-01-02-0001");
+  if(!l1){
+    alert("請先選擇或新增 L1");
     return;
   }
 
-  const l1 = normalizeL1(id.split("-")[0]);
+  if(l1 !== "OT"){
+    if(!/^\d{2}$/.test(l2)){
+      alert("L2 必須是兩位數，例如 01");
+      return;
+    }
+
+    if(!/^\d{2}$/.test(l3)){
+      alert("L3 必須是兩位數，例如 01");
+      return;
+    }
+  }
+
+  if(!isValidID(id)){
+    alert("ID 格式必須是 HM-01-01-0001，或暫存區格式 OT-01");
+    return;
+  }
+
+  if(l1 === "OT" && !/^OT-\d{2}$/.test(id)){
+    alert("OT 暫存區格式必須是 OT-兩位數，例如 OT-01");
+    return;
+  }
+
+  if(l1 !== "OT" && !/^[A-Z]{2}-\d{2}-\d{2}-\d{4}$/.test(id)){
+    alert("正式資料 ID 格式必須是 L1-L2-L3-L4，例如 HM-01-01-0001");
+    return;
+  }
+
   if(l1 && !l1Options.includes(l1)){
     l1Options.push(l1);
     l1Options.sort();
-    renderL1Options(l1);
   }
 
   const created_at = nowText();
@@ -604,6 +654,11 @@ function clearFormKeepStructure(){
   document.getElementById("info").value = "";
   document.getElementById("notes").value = "";
   document.getElementById("tags").value = "";
+
+  if(document.getElementById("l1Select").value !== "OT"){
+    document.getElementById("l2").value = "";
+    document.getElementById("l3").value = "";
+  }
 }
 
 function renderList(){
